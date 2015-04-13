@@ -7,6 +7,6 @@ import (
 
 func registerHandlers() {
 	gottp.NewUrl("assets", "^/assets/?$", new(handlers.Assets))
-	gottp.NewUrl("assets", "^/assets/(?P<_id>\\w+)/?$", new(handlers.Asset))
-	gottp.NewUrl("assets", "^/assets/(?P<_id>\\w+)/thumbnail/?$", new(handlers.Thumbnail))
+	gottp.NewUrl("asset", "^/assets/(?P<_id>\\w+)/?$", new(handlers.Asset))
+	gottp.NewUrl("thumbnail", "^/assets/(?P<_id>\\w+)/thumbnail/?$", new(handlers.Thumbnail))
 }
