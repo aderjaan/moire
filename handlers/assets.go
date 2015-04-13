@@ -6,6 +6,7 @@ import (
 
 	"github.com/bulletind/moire/db"
 
+	"github.com/bulletind/moire/config"
 	"gopkg.in/mgo.v2/bson"
 	"gopkg.in/simversity/gottp.v2"
 	"gopkg.in/simversity/gottp.v2/utils"
@@ -45,6 +46,7 @@ func createAsset(conn *db.MConn, args *assetArgs) *db.Asset {
 		Id:        bson.NewObjectId(),
 		CreatedOn: db.EpochNow(),
 		Name:      args.Name,
+		Bucket:    config.Settings.S3.Bucket,
 		FileType:  args.fileType,
 		MimeType:  args.MimeType,
 		Status:    db.PENDING,

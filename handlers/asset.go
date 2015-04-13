@@ -35,7 +35,8 @@ func (self *Asset) Get(request *gottp.Request) {
 
 	conn := getConn()
 	asset := getAsset(conn, _id)
-	request.Write(asset)
+
+	request.Redirect(GetURL(asset), 302)
 	return
 }
 
@@ -52,6 +53,7 @@ func (self *Asset) Post(request *gottp.Request) {
 
 	conn := getConn()
 	asset := getAsset(conn, _id)
-	request.Write(asset)
+
+	request.Redirect(GetUploadURL(asset), 302)
 	return
 }
