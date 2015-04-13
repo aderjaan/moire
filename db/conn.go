@@ -6,12 +6,21 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Simversity/usher/utils"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
 var Conn *MConn
+
+func EpochHours() int64 {
+	now := time.Now()
+	return 3600 * (now.Unix() / 3600)
+}
+
+func EpochNow() int64 {
+	now := time.Now()
+	return now.UnixNano() / int64(time.Millisecond) //Convert to Milliseconds
+}
 
 type M bson.M
 
@@ -274,7 +283,7 @@ func (self *MConn) Update(table string, query M, doc M) error {
 				"https://github.com/Simversity/blackjack/issues/1051",
 		)
 	} else {
-		AlterDoc(&doc, "$set", M{"updated_on": utils.EpochNow()})
+		AlterDoc(&doc, "$set", M{"updated_on": EpochNow()})
 		_, update_err = coll.UpdateAll(query, doc)
 	}
 
@@ -314,32 +323,19 @@ func InArray(key string, arrays ...[]string) bool {
 	return false
 }
 
-func (self *MConn) Insert(table string, arguments ...interface{}) (_id string) {
+func (self *MConn) Insert(table string, doc interface{}) {
 	//Create a Session Copy and be responsible for Closing it.
 	session := self.Session.Copy()
 	db := session.DB(self.Dbname)
 	defer session.Close()
 
-	var out interface{}
-	if len(arguments) > 1 {
-		out = arguments[1]
-	} else {
-		out = nil
-	}
-
-	doc := arguments[0]
+	session.SetSafe(&mgo.Safe{})
 
 	coll := db.C(table)
+
 	err := coll.Insert(doc)
 	if err != nil {
 		panic(err)
-	}
-
-	if out != nil {
-		stream, merr := bson.Marshal(doc)
-		if merr == nil {
-			bson.Unmarshal(stream, out)
-		}
 	}
 
 	return
