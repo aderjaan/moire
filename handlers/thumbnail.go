@@ -1,13 +1,35 @@
 package handlers
 
-import "gopkg.in/simversity/gottp.v2"
+import (
+	"net/http"
+
+	"gopkg.in/simversity/gottp.v2"
+)
 
 type Thumbnail struct {
 	gottp.BaseHandler
 }
 
 func (self *Thumbnail) Get(request *gottp.Request) {
-	//Redirect to the proper thumbnail.
-	//Accepts thumbnail sizing.
-	//Crete a new image if one does not exist of right size.
+	_id, ok := request.GetArgument("_id").(string)
+	if !ok {
+		request.Raise(gottp.HttpError{
+			http.StatusNotFound,
+			"Not found",
+		})
+
+		return
+	}
+
+	conn := getConn()
+	asset := getAsset(conn, _id)
+
+	url, err := getThumbnailURL(asset)
+	if err != nil {
+		getPlaceHolder(request.Writer, err.Error())
+	} else {
+		request.Redirect(url, 302)
+	}
+
+	return
 }

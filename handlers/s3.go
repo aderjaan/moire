@@ -81,10 +81,10 @@ func getThumbnailURL(asset *db.Asset) (url string, err error) {
 		url = getSignedURL(asset.Bucket, asset.ThumbnailPath)
 		break
 	case db.LOST:
-		err = errors.New(asset.Path + " is no longer available.")
+		err = errors.New("Ouch! This thumbnail is no longer available.")
 		break
 	default:
-		err = errors.New("This content is still being uploaded. We appreciate your impatience")
+		err = errors.New("Hmm! Thumbnail was not found as the content is still being uploaded.")
 		break
 	}
 
@@ -97,7 +97,7 @@ func getURL(asset *db.Asset) (url string, err error) {
 		url = getSignedURL(asset.Bucket, asset.Path)
 		break
 	case db.LOST:
-		err = errors.New(asset.Path + " is no longer available.")
+		err = errors.New("Ouch! This content is no longer available.")
 		break
 	default:
 		err = errors.New("This content is still being uploaded. We appreciate your impatience")
