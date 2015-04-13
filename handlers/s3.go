@@ -2,11 +2,13 @@ package handlers
 
 import (
 	"errors"
+	"math/rand"
+	"time"
 
 	"github.com/bulletind/moire/config"
 	"github.com/bulletind/moire/db"
-	"launchpad.net/goamz/aws"
-	"launchpad.net/goamz/s3"
+	"gopkg.in/amz.v3/aws"
+	"gopkg.in/amz.v3/s3"
 )
 
 func getRegion() aws.Region {
@@ -22,12 +24,32 @@ func getBucket(bucket string) *s3.Bucket {
 	region := getRegion()
 
 	connection := s3.New(auth, region)
-	b := connection.Bucket(bucket)
+	b, err := connection.Bucket(bucket)
+	if err != nil {
+		panic(err)
+	}
+
 	return b
 }
 
+var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+func randSeq(n int) string {
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(b)
+}
+
 func getSignedURL(bucket, path string) string {
-	return "http://google.com"
+	b := getBucket(bucket)
+	url, err := b.SignedURL(path, 60*time.Minute)
+	if err != nil {
+		panic(err)
+	}
+
+	return url
 }
 
 func getUploadURL(asset *db.Asset) string {
@@ -39,14 +61,16 @@ func getUploadURL(asset *db.Asset) string {
 
 	switch asset.FileType {
 	case ImageFile:
-		url = "/" + ImageFile + "/"
+		url = ImageFile
 	case VideoFile:
-		url = "/" + VideoFile + "/"
+		url = VideoFile
 	case AudioFile:
-		url = "/" + AudioFile + "/"
+		url = AudioFile
 	default:
-		url = "/" + PlainFile + "/"
+		url = PlainFile
 	}
+
+	url += "/" + asset.Id.Hex() + "/" + randSeq(10)
 
 	return getSignedURL(asset.Bucket, url)
 }

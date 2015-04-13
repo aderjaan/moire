@@ -61,7 +61,7 @@ func (self *Asset) Post(request *gottp.Request) {
 	asset := getAsset(conn, _id)
 
 	url := getUploadURL(asset)
-	request.Redirect(url, 302)
+	request.Write(url)
 
 	return
 }
