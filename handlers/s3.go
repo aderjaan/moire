@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"errors"
+
 	"github.com/bulletind/moire/config"
 	"github.com/bulletind/moire/db"
 	"launchpad.net/goamz/aws"
@@ -28,15 +30,7 @@ func getSignedURL(bucket, path string) string {
 	return "http://google.com"
 }
 
-func getPendingURL(filetype string) string {
-	return "http://google.com"
-}
-
-func getLostURL(filetype string) string {
-	return "http://google.com"
-}
-
-func GetUploadURL(asset *db.Asset) string {
+func getUploadURL(asset *db.Asset) string {
 	if asset.Path != "" || asset.Status == db.READY {
 		panic("Asset already uploded to " + asset.Path)
 	}
@@ -57,32 +51,32 @@ func GetUploadURL(asset *db.Asset) string {
 	return getSignedURL(asset.Bucket, url)
 }
 
-func GetThumbnailURL(asset *db.Asset) (url string) {
+func getThumbnailURL(asset *db.Asset) (url string, err error) {
 	switch asset.Status {
 	case db.READY:
 		url = getSignedURL(asset.Bucket, asset.ThumbnailPath)
 		break
 	case db.LOST:
-		url = getLostURL(asset.FileType)
+		err = errors.New(asset.Path + " is no longer available.")
 		break
 	default:
-		url = getPendingURL(asset.FileType)
+		err = errors.New("This content is still being uploaded. We appreciate your impatience")
 		break
 	}
 
 	return
 }
 
-func GetURL(asset *db.Asset) (url string) {
+func getURL(asset *db.Asset) (url string, err error) {
 	switch asset.Status {
 	case db.READY:
 		url = getSignedURL(asset.Bucket, asset.Path)
 		break
 	case db.LOST:
-		url = getLostURL(asset.FileType)
+		err = errors.New(asset.Path + " is no longer available.")
 		break
 	default:
-		url = getPendingURL(asset.FileType)
+		err = errors.New("This content is still being uploaded. We appreciate your impatience")
 		break
 	}
 

@@ -36,7 +36,13 @@ func (self *Asset) Get(request *gottp.Request) {
 	conn := getConn()
 	asset := getAsset(conn, _id)
 
-	request.Redirect(GetURL(asset), 302)
+	url, err := getURL(asset)
+	if err != nil {
+		getPlaceHolder(request.Writer, err.Error())
+	} else {
+		request.Redirect(url, 302)
+	}
+
 	return
 }
 
@@ -54,6 +60,8 @@ func (self *Asset) Post(request *gottp.Request) {
 	conn := getConn()
 	asset := getAsset(conn, _id)
 
-	request.Redirect(GetUploadURL(asset), 302)
+	url := getUploadURL(asset)
+	request.Redirect(url, 302)
+
 	return
 }
