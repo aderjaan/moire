@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/bulletind/moire/db"
 
@@ -26,8 +27,17 @@ type Assets struct {
 }
 
 type assetArgs struct {
+	fileType string
 	Name     string `json:"name" required:"true"`
 	MimeType string `json:"mime_type" required:"true"`
+}
+
+func isMimeAllowed(mimeType string) bool {
+	if mimeType != ImageFile && mimeType != VideoFile && mimeType != AudioFile {
+		return false
+	}
+
+	return true
 }
 
 func createAsset(conn *db.MConn, args *assetArgs) *db.Asset {
@@ -35,6 +45,7 @@ func createAsset(conn *db.MConn, args *assetArgs) *db.Asset {
 		Id:        bson.NewObjectId(),
 		CreatedOn: db.EpochNow(),
 		Name:      args.Name,
+		FileType:  args.fileType,
 		MimeType:  args.MimeType,
 		Status:    db.PENDING,
 	}
@@ -59,12 +70,35 @@ func (self *Assets) Post(request *gottp.Request) {
 		return
 	}
 
+	var fileType string
+
+	if strings.HasPrefix(args.MimeType, ImageFile) {
+		fileType = ImageFile
+	} else if strings.HasPrefix(args.MimeType, VideoFile) {
+		fileType = VideoFile
+	} else if strings.HasPrefix(args.MimeType, AudioFile) {
+		fileType = AudioFile
+	}
+
+	if !isMimeAllowed(fileType) {
+		request.Raise(gottp.HttpError{
+			http.StatusBadRequest,
+			"mime_type " + args.MimeType + " is not supported.",
+		})
+
+		return
+	}
+
+	args.fileType = fileType
+
 	conn := getConn()
 	asset := createAsset(conn, &args)
 
+	_id := asset.Id.Hex()
+
 	request.Write(db.M{
-		"_id": asset.Id,
-		"url": "/assets/" + asset.Id,
+		"_id": _id,
+		"url": "/assets/" + _id,
 	})
 
 	return
