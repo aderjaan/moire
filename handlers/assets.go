@@ -12,17 +12,6 @@ import (
 	"gopkg.in/simversity/gottp.v2/utils"
 )
 
-func ConcatenateErrors(errs *[]error) string {
-	var errString string
-	for i := 0; i < len(*errs); i++ {
-		errString += (*errs)[i].Error()
-		if (len(*errs) - i) > 1 {
-			errString += ","
-		}
-	}
-	return errString
-}
-
 type Assets struct {
 	gottp.BaseHandler
 }

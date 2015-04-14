@@ -1,36 +1,71 @@
 package handlers
 
-import "gopkg.in/simversity/gottp.v2"
+import (
+	"log"
+	"net/http"
+
+	"gopkg.in/simversity/gottp.v2"
+	"gopkg.in/simversity/gottp.v2/utils"
+)
 
 type SNS struct {
 	gottp.BaseHandler
 }
 
 func (self *SNS) Post(request *gottp.Request) {
+	var errs *[]error
+
+	n := snsNotice{}
+	request.ConvertArguments(&n)
+
+	errs = utils.Validate(&n)
+	if len(*errs) > 0 {
+		request.Raise(gottp.HttpError{
+			http.StatusBadRequest,
+			ConcatenateErrors(errs),
+		})
+
+		return
+	}
+
+	msg := snsMessage{}
+	utils.Decoder([]byte(n.Message), &msg)
+
+	errs = utils.Validate(&msg)
+	if len(*errs) > 0 {
+		request.Raise(gottp.HttpError{
+			http.StatusBadRequest,
+			ConcatenateErrors(errs),
+		})
+
+		return
+	}
+
+	record := msg.Records[0]
+
+	log.Println(record.S3.Object.Key, record.S3.Object.Size)
 }
 
 type snsMessage struct {
 	Records []struct {
 		S3 struct {
 			Bucket struct {
-				Name string `json:"name"`
-			} `json:"bucket"`
+				Name string `json:"name" required:"true"`
+			} `json:"bucket" required:"true"`
 			Object struct {
-				Key  string `json:"key"`
-				Size int    `json:"size"`
-			} `json:"object"`
+				Key  string `json:"key" required:"true"`
+				Size int    `json:"size" required:"true"`
+			} `json:"object" required:"true"`
 		}
-	} `json:"Records"`
+	} `json:"Records" required:"true"`
 }
 
 type snsNotice struct {
-	Type           string `json:"Type"`
-	MessageId      string `json:"MessageId"`
-	TopicArn       string `json:"TopicArn"`
-	Subject        string `json:"Subject"`
-	Message        string `json:"Message"`
-	Timestamp      string `json:"Timestamp"`
-	Signature      string `json:"Signature"`
-	SigningCertURL string `json:"SigningCertURL"`
-	UnsubscribeURL string `json:"UnsubscribeURL"`
+	Type      string `json:"Type"`
+	MessageId string `json:"MessageId" required:"true"`
+	TopicArn  string `json:"TopicArn"`
+	Subject   string `json:"Subject"`
+	Message   string `json:"Message" required:"true"`
+	Timestamp string `json:"Timestamp"`
+	Signature string `json:"Signature" required:"true"`
 }
