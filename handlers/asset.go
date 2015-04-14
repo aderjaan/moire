@@ -3,30 +3,11 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/bulletind/moire/db"
-	"gopkg.in/mgo.v2/bson"
 	"gopkg.in/simversity/gottp.v2"
 )
 
 type Asset struct {
 	gottp.BaseHandler
-}
-
-func updateAsset(conn *db.MConn, _id string, doc db.M) {
-	err := conn.Update(db.ASSET, db.M{"_id": bson.ObjectIdHex(_id)}, doc)
-	if err != nil {
-		panic(err)
-	}
-}
-
-func getAsset(conn *db.MConn, _id string) *db.Asset {
-	var asset db.Asset
-	err := conn.GetOne(db.ASSET, db.M{"_id": bson.ObjectIdHex(_id)}, &asset)
-	if err != nil {
-		panic(err)
-	}
-
-	return &asset
 }
 
 func (self *Asset) Get(request *gottp.Request) {

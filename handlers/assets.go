@@ -6,8 +6,6 @@ import (
 
 	"github.com/bulletind/moire/db"
 
-	"github.com/bulletind/moire/config"
-	"gopkg.in/mgo.v2/bson"
 	"gopkg.in/simversity/gottp.v2"
 	"gopkg.in/simversity/gottp.v2/utils"
 )
@@ -20,33 +18,6 @@ type assetArgs struct {
 	fileType string
 	Name     string `json:"name" required:"true"`
 	MimeType string `json:"mime_type" required:"true"`
-}
-
-func isMimeAllowed(mimeType string) bool {
-	if mimeType != ImageFile && mimeType != VideoFile && mimeType != AudioFile {
-		return false
-	}
-
-	return true
-}
-
-func createAsset(conn *db.MConn, args *assetArgs) *db.Asset {
-	assetId := bson.NewObjectId()
-
-	asset := db.Asset{
-		Id:        assetId,
-		CreatedOn: db.EpochNow(),
-		Name:      args.Name,
-		Bucket:    config.Settings.S3.Bucket,
-		FileType:  args.fileType,
-		MimeType:  args.MimeType,
-		Status:    db.PENDING,
-		Path:      getUploadURL(assetId.Hex(), args.fileType),
-	}
-
-	conn.Insert(db.ASSET, &asset)
-
-	return &asset
 }
 
 func (self *Assets) Post(request *gottp.Request) {

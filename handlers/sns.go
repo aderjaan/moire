@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"log"
 	"net/http"
 	"net/url"
 
@@ -9,16 +8,6 @@ import (
 	"gopkg.in/simversity/gottp.v2"
 	"gopkg.in/simversity/gottp.v2/utils"
 )
-
-func getAssetByPath(conn *db.MConn, path string) *db.Asset {
-	var asset db.Asset
-	err := conn.GetOne(db.ASSET, db.M{"path": path}, &asset)
-	if err != nil {
-		panic(err)
-	}
-
-	return &asset
-}
 
 type SNS struct {
 	gottp.BaseHandler
@@ -65,7 +54,14 @@ func (self *SNS) Post(request *gottp.Request) {
 		return
 	}
 
-	log.Println(key, record.S3.Object.Size)
+	doc := db.M{
+		"size":   record.S3.Object.Size,
+		"status": db.READY,
+	}
+
+	conn := getConn()
+	_id := assetReady(conn, key, record.S3.Bucket.Name, db.M{"$set": doc})
+	request.Write("asset " + _id + " marked as ready")
 }
 
 type snsMessage struct {

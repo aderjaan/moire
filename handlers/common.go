@@ -3,6 +3,7 @@ package handlers
 import (
 	"github.com/bulletind/moire/config"
 	"github.com/bulletind/moire/db"
+	"gopkg.in/mgo.v2/bson"
 )
 
 const (
@@ -30,4 +31,64 @@ func ConcatenateErrors(errs *[]error) string {
 		}
 	}
 	return errString
+}
+
+func updateAsset(conn *db.MConn, _id string, doc db.M) {
+	err := conn.Update(db.ASSET, db.M{"_id": bson.ObjectIdHex(_id)}, doc)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func getAsset(conn *db.MConn, _id string) *db.Asset {
+	var asset db.Asset
+	err := conn.GetOne(db.ASSET, db.M{"_id": bson.ObjectIdHex(_id)}, &asset)
+	if err != nil {
+		panic(err)
+	}
+
+	return &asset
+}
+
+func assetReady(conn *db.MConn, path, bucket string, doc db.M) string {
+	var asset db.Asset
+
+	err := conn.FindAndUpdate(db.ASSET, db.M{
+		"path":   path,
+		"bucket": bucket,
+		"status": db.PENDING,
+	}, doc, &asset)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return asset.Id.Hex()
+}
+
+func createAsset(conn *db.MConn, args *assetArgs) *db.Asset {
+	assetId := bson.NewObjectId()
+
+	asset := db.Asset{
+		Id:        assetId,
+		CreatedOn: db.EpochNow(),
+		Name:      args.Name,
+		Bucket:    config.Settings.S3.Bucket,
+		FileType:  args.fileType,
+		MimeType:  args.MimeType,
+		Status:    db.PENDING,
+		Path:      getUploadURL(assetId.Hex(), args.fileType),
+	}
+
+	conn.Insert(db.ASSET, &asset)
+
+	return &asset
+}
+
+func isMimeAllowed(mimeType string) bool {
+	if mimeType != ImageFile && mimeType != VideoFile && mimeType != AudioFile {
+		return false
+	}
+
+	return true
 }

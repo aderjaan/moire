@@ -124,6 +124,7 @@ func (self *MConn) findAndApply(table string, query M,
 	change.ReturnNew = true
 
 	coll := db.C(table)
+	log.Println(query)
 	_, err := coll.Find(query).Apply(change, result)
 	if err != nil {
 		log.Println("Error Applying Changes", table, err)
@@ -134,8 +135,9 @@ func (self *MConn) findAndApply(table string, query M,
 func (self *MConn) FindAndUpsert(table string, query M,
 	doc M, result interface{}) error {
 	change := mgo.Change{
-		Update: doc,
-		Upsert: true,
+		Update:    doc,
+		Upsert:    true,
+		ReturnNew: true,
 	}
 	return self.findAndApply(table, query, change, result)
 }
@@ -143,8 +145,9 @@ func (self *MConn) FindAndUpsert(table string, query M,
 func (self *MConn) FindAndUpdate(table string, query M,
 	doc M, result interface{}) error {
 	change := mgo.Change{
-		Update: doc,
-		Upsert: false,
+		Update:    doc,
+		Upsert:    false,
+		ReturnNew: true,
 	}
 	return self.findAndApply(table, query, change, result)
 }
