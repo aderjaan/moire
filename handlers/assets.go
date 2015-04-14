@@ -31,14 +31,17 @@ func isMimeAllowed(mimeType string) bool {
 }
 
 func createAsset(conn *db.MConn, args *assetArgs) *db.Asset {
+	assetId := bson.NewObjectId()
+
 	asset := db.Asset{
-		Id:        bson.NewObjectId(),
+		Id:        assetId,
 		CreatedOn: db.EpochNow(),
 		Name:      args.Name,
 		Bucket:    config.Settings.S3.Bucket,
 		FileType:  args.fileType,
 		MimeType:  args.MimeType,
 		Status:    db.PENDING,
+		Path:      getUploadURL(assetId.Hex(), args.fileType),
 	}
 
 	conn.Insert(db.ASSET, &asset)

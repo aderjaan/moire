@@ -12,6 +12,13 @@ type Asset struct {
 	gottp.BaseHandler
 }
 
+func updateAsset(conn *db.MConn, _id string, doc db.M) {
+	err := conn.Update(db.ASSET, db.M{"_id": bson.ObjectIdHex(_id)}, doc)
+	if err != nil {
+		panic(err)
+	}
+}
+
 func getAsset(conn *db.MConn, _id string) *db.Asset {
 	var asset db.Asset
 	err := conn.GetOne(db.ASSET, db.M{"_id": bson.ObjectIdHex(_id)}, &asset)
@@ -60,8 +67,8 @@ func (self *Asset) Post(request *gottp.Request) {
 	conn := getConn()
 	asset := getAsset(conn, _id)
 
-	url := getUploadURL(asset)
-	request.Write(url)
+	signedUrl := getSignedURL(asset.Bucket, asset.Path)
 
+	request.Write(signedUrl)
 	return
 }

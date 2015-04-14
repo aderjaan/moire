@@ -3,10 +3,22 @@ package handlers
 import (
 	"log"
 	"net/http"
+	"net/url"
 
+	"github.com/bulletind/moire/db"
 	"gopkg.in/simversity/gottp.v2"
 	"gopkg.in/simversity/gottp.v2/utils"
 )
+
+func getAssetByPath(conn *db.MConn, path string) *db.Asset {
+	var asset db.Asset
+	err := conn.GetOne(db.ASSET, db.M{"path": path}, &asset)
+	if err != nil {
+		panic(err)
+	}
+
+	return &asset
+}
 
 type SNS struct {
 	gottp.BaseHandler
@@ -43,7 +55,17 @@ func (self *SNS) Post(request *gottp.Request) {
 
 	record := msg.Records[0]
 
-	log.Println(record.S3.Object.Key, record.S3.Object.Size)
+	key, err := url.QueryUnescape(record.S3.Object.Key)
+	if err != nil {
+		request.Raise(gottp.HttpError{
+			http.StatusBadRequest,
+			"Cannot escape Path",
+		})
+
+		return
+	}
+
+	log.Println(key, record.S3.Object.Size)
 }
 
 type snsMessage struct {

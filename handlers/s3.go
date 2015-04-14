@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"math/rand"
+	"path"
 	"time"
 
 	"github.com/bulletind/moire/config"
@@ -52,14 +53,10 @@ func getSignedURL(bucket, path string) string {
 	return url
 }
 
-func getUploadURL(asset *db.Asset) string {
-	if asset.Path != "" || asset.Status == db.READY {
-		panic("Asset already uploded to " + asset.Path)
-	}
-
+func getUploadURL(assetId, fileType string) string {
 	var url string
 
-	switch asset.FileType {
+	switch fileType {
 	case ImageFile:
 		url = ImageFile
 	case VideoFile:
@@ -70,9 +67,7 @@ func getUploadURL(asset *db.Asset) string {
 		url = PlainFile
 	}
 
-	url += "/" + asset.Id.Hex() + "/" + randSeq(10)
-
-	return getSignedURL(asset.Bucket, url)
+	return path.Join(url, assetId, randSeq(10))
 }
 
 func getThumbnailURL(asset *db.Asset) (url string, err error) {
