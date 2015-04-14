@@ -11,6 +11,7 @@ const (
 
 type Asset struct {
 	Id            bson.ObjectId `json:"_id,omitempty" bson:"_id",omitempty`
+	Size          int64         `json:"size" bson:"size"`
 	CreatedOn     int64         `json:"created_on" bson:"created_on"`
 	Name          string        `json:"name" bson:"name"`
 	FileType      string        `json:"file_type" bson:"file_type"`
