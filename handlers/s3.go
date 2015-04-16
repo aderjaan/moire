@@ -36,7 +36,7 @@ func getBucket(bucket string) *s3.Bucket {
 	return b
 }
 
-func guessMimeType(filePath string) {
+func guessMimeType(filePath string) string {
 	mm, err := magicmime.New(magicmime.MAGIC_MIME_TYPE | magicmime.MAGIC_SYMLINK | magicmime.MAGIC_ERROR)
 	if err != nil {
 		panic(err)
