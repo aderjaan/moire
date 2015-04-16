@@ -16,17 +16,19 @@ const mogCmd = "mogrify -resize 640x480 %v"
 const CANVAS_PATH = "/tmp/black_canvas.png"
 const PLAY_ICON_PATH = "/tmp/playiconhover.png"
 
+func patchPlayIcon(thumbPath string) {
+	canvaser := fmt.Sprintf(canvasCmd, thumbPath, CANVAS_PATH, thumbPath)
+	mogrifier := fmt.Sprintf(mogCmd, thumbPath)
+	log.Println(thumber, canvaser, mogrifier)
+}
+
 func generateThumbnail(bucket, videoUrl string) {
 	thumbPath := "/tmp/thumbPath.png"
 	url := getSignedURL(bucket, videoUrl)
 
 	thumber := fmt.Sprintf(thumbCmd, url, thumbPath)
-	canvaser := fmt.Sprintf(canvasCmd, thumbPath, CANVAS_PATH, thumbPath)
-	iconer := fmt.Sprintf(iconCmd, PLAY_ICON_PATH, thumbPath, thumbPath)
-	mogrifier := fmt.Sprintf(mogCmd, thumbPath)
 
 	uploadFile(thumbPath)
-	log.Println(thumber, canvaser, iconer, mogrifier)
 }
 
 type Thumbnail struct {
