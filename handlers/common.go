@@ -50,7 +50,7 @@ func getAsset(conn *db.MConn, _id string) *db.Asset {
 	return &asset
 }
 
-func assetReady(conn *db.MConn, path, bucket string, doc db.M) string {
+func assetReady(conn *db.MConn, path, bucket string, doc db.M) *db.Asset {
 	var asset db.Asset
 
 	err := conn.FindAndUpdate(db.ASSET, db.M{
@@ -63,7 +63,7 @@ func assetReady(conn *db.MConn, path, bucket string, doc db.M) string {
 		panic(err)
 	}
 
-	return asset.Id.Hex()
+	return &asset
 }
 
 func createAsset(conn *db.MConn, args *assetArgs) *db.Asset {

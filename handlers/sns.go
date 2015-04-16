@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/bulletind/moire/db"
 	"gopkg.in/simversity/gottp.v2"
@@ -55,13 +56,18 @@ func (self *SNS) Post(request *gottp.Request) {
 	}
 
 	doc := db.M{
-		"size":   record.S3.Object.Size,
-		"status": db.READY,
+		"size": record.S3.Object.Size,
+		//"status": db.READY,
 	}
 
 	conn := getConn()
-	_id := assetReady(conn, key, record.S3.Bucket.Name, db.M{"$set": doc})
-	request.Write("asset " + _id + " marked as ready")
+	asset := assetReady(conn, key, record.S3.Bucket.Name, db.M{"$set": doc})
+
+	if strings.HasPrefix(asset.MimeType, VideoFile) {
+		generateThumbnail(asset.Bucket, asset.Path)
+	}
+
+	request.Write("asset " + asset.Id.Hex() + " marked as ready")
 }
 
 type snsMessage struct {

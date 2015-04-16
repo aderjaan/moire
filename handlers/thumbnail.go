@@ -1,10 +1,33 @@
 package handlers
 
 import (
+	"fmt"
+	"log"
 	"net/http"
 
 	"gopkg.in/simversity/gottp.v2"
 )
+
+const thumbCmd = "ffmpeg -i %v -ss 00:00:01 -vframes 1 -vf scale=-1:600 %v"
+const canvasCmd = "composite -gravity center %v %v %v"
+const iconCmd = "composite -gravity center %v %v %v"
+const mogCmd = "mogrify -resize 640x480 %v"
+
+const CANVAS_PATH = "/tmp/black_canvas.png"
+const PLAY_ICON_PATH = "/tmp/playiconhover.png"
+
+func generateThumbnail(bucket, videoUrl string) {
+	thumbPath := "/tmp/thumbPath.png"
+	url := getSignedURL(bucket, videoUrl)
+
+	thumber := fmt.Sprintf(thumbCmd, url, thumbPath)
+	canvaser := fmt.Sprintf(canvasCmd, thumbPath, CANVAS_PATH, thumbPath)
+	iconer := fmt.Sprintf(iconCmd, PLAY_ICON_PATH, thumbPath, thumbPath)
+	mogrifier := fmt.Sprintf(mogCmd, thumbPath)
+
+	uploadFile(thumbPath)
+	log.Println(thumber, canvaser, iconer, mogrifier)
+}
 
 type Thumbnail struct {
 	gottp.BaseHandler

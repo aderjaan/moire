@@ -2,12 +2,15 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
+	"io/ioutil"
 	"math/rand"
 	"path"
 	"time"
 
 	"github.com/bulletind/moire/config"
 	"github.com/bulletind/moire/db"
+	"github.com/rakyll/magicmime"
 	"gopkg.in/amz.v3/aws"
 	"gopkg.in/amz.v3/s3"
 )
@@ -31,6 +34,33 @@ func getBucket(bucket string) *s3.Bucket {
 	}
 
 	return b
+}
+
+func guessMimeType(filePath string) {
+	mm, err := magicmime.New(magicmime.MAGIC_MIME_TYPE | magicmime.MAGIC_SYMLINK | magicmime.MAGIC_ERROR)
+	if err != nil {
+		panic(err)
+	}
+
+	mimetype, err := mm.TypeByFile(filePath)
+	if err != nil {
+		fmt.Printf("Something went wrong: %s", err)
+		mimetype = ""
+	}
+
+	return mimetype
+}
+
+func uploadFile(filePath string) {
+	fileType := guessMimeType(filePath)
+
+	data, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		panic(err)
+	}
+
+	b := getBucket(config.Settings.S3.Bucket)
+	b.Put(filePath, data, fileType, s3.PublicRead)
 }
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
