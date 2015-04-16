@@ -19,7 +19,7 @@ const PLAY_ICON_PATH = "/tmp/playiconhover.png"
 func patchPlayIcon(thumbPath string) {
 	canvaser := fmt.Sprintf(canvasCmd, thumbPath, CANVAS_PATH, thumbPath)
 	mogrifier := fmt.Sprintf(mogCmd, thumbPath)
-	log.Println(thumber, canvaser, mogrifier)
+	log.Println(canvaser, mogrifier)
 }
 
 func generateThumbnail(bucket, videoUrl string) {
@@ -28,7 +28,8 @@ func generateThumbnail(bucket, videoUrl string) {
 
 	thumber := fmt.Sprintf(thumbCmd, url, thumbPath)
 
-	uploadFile(thumbPath)
+	log.Println(thumber)
+	//uploadFile(thumbPath)
 }
 
 type Thumbnail struct {
