@@ -2,15 +2,15 @@ package handlers
 
 import (
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"math/rand"
+	"mime"
 	"path"
+	"path/filepath"
 	"time"
 
 	"github.com/bulletind/moire/config"
 	"github.com/bulletind/moire/db"
-	"github.com/rakyll/magicmime"
 	"gopkg.in/amz.v3/aws"
 	"gopkg.in/amz.v3/s3"
 )
@@ -37,18 +37,8 @@ func getBucket(bucket string) *s3.Bucket {
 }
 
 func guessMimeType(filePath string) string {
-	mm, err := magicmime.New(magicmime.MAGIC_MIME_TYPE | magicmime.MAGIC_SYMLINK | magicmime.MAGIC_ERROR)
-	if err != nil {
-		panic(err)
-	}
-
-	mimetype, err := mm.TypeByFile(filePath)
-	if err != nil {
-		fmt.Printf("Something went wrong: %s", err)
-		mimetype = ""
-	}
-
-	return mimetype
+	ext := filepath.Ext(filePath)
+	return mime.TypeByExtension(ext)
 }
 
 func uploadFile(filePath string) {
