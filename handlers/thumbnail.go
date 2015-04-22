@@ -45,7 +45,7 @@ func patchPlayIcon(thumbPath string) string {
 	return thumbPath
 }
 
-func generateThumbnail(bucket, videoUrl, mimetype string) string {
+func generateThumbnail(bucket, videoUrl string) string {
 	thumbPath := "/tmp/thumbPath.png"
 	url := getSignedURL(bucket, videoUrl)
 	thumber := strings.Split(fmt.Sprintf(thumbCmd, url, thumbPath), " ")
@@ -55,7 +55,6 @@ func generateThumbnail(bucket, videoUrl, mimetype string) string {
 	execCommand(thumber)
 
 	return thumbPath
-	//uploadFile(thumbPath)
 }
 
 type Thumbnail struct {
