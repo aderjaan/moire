@@ -65,15 +65,14 @@ func randSeq(n int) string {
 	return string(b)
 }
 
-func getSignedURL(bucket, path, mimetype string, isUpload bool) string {
+func getSignedUploadURL(bucket, path, mimetype string) string {
 	b := getBucket(bucket)
-	var url = ""
-	if isUpload {
-		url = b.UploadSignedURL(path, "PUT", mimetype, time.Now().Add(time.Hour))
-	} else {
-		url = b.SignedURL(path, time.Now().Add(time.Hour))
-	}
-	return url
+	return b.UploadSignedURL(path, "PUT", mimetype, time.Now().Add(time.Hour))
+}
+
+func getSignedURL(bucket, path string) string {
+	b := getBucket(bucket)
+	return b.SignedURL(path, time.Now().Add(time.Hour))
 }
 
 func getUploadURL(assetId, fileType string) string {
@@ -99,7 +98,7 @@ func getThumbnailURL(asset *db.Asset) (url string, err error) {
 		if asset.ThumbnailPath == "" {
 			err = errors.New("Ouch! This thumbnail is no longer available.")
 		}
-		url = getSignedURL(asset.Bucket, asset.ThumbnailPath, asset.MimeType, false)
+		url = getSignedURL(asset.Bucket, asset.ThumbnailPath)
 		break
 	case db.LOST:
 		err = errors.New("Ouch! This thumbnail is no longer available.")
@@ -115,7 +114,7 @@ func getThumbnailURL(asset *db.Asset) (url string, err error) {
 func getURL(asset *db.Asset) (url string, err error) {
 	switch asset.Status {
 	case db.READY:
-		url = getSignedURL(asset.Bucket, asset.Path, asset.MimeType, false)
+		url = getSignedURL(asset.Bucket, asset.Path)
 		break
 	case db.LOST:
 		err = errors.New("Ouch! This content is no longer available.")

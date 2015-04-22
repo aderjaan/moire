@@ -32,23 +32,30 @@ func execCommand(command []string) {
 	}
 }
 
-func generateThumbnail(bucket, videoUrl, mimetype string) {
-	thumbPath := "/tmp/thumbPath.png"
-	url := getSignedURL(bucket, videoUrl, mimetype, true)
-
-	thumber := strings.Split(fmt.Sprintf(thumbCmd, url, thumbPath), " ")
+func patchPlayIcon(thumbPath string) string {
 	canvaser := strings.Split(fmt.Sprintf(canvasCmd, thumbPath, CANVAS_PATH, thumbPath), " ")
 	iconer := strings.Split(fmt.Sprintf(iconCmd, thumbPath, PLAY_ICON_PATH, thumbPath), " ")
 	mogrifier := strings.Split(fmt.Sprintf(mogCmd, thumbPath), " ")
+	log.Println(canvaser, iconer, mogrifier)
 
-	log.Println(thumber, canvaser, iconer, mogrifier)
-
-	execCommand(thumber)
 	execCommand(canvaser)
 	execCommand(iconer)
 	execCommand(mogrifier)
 
-	uploadFile(thumbPath)
+	return thumbPath
+}
+
+func generateThumbnail(bucket, videoUrl, mimetype string) string {
+	thumbPath := "/tmp/thumbPath.png"
+	url := getSignedURL(bucket, videoUrl)
+	thumber := strings.Split(fmt.Sprintf(thumbCmd, url, thumbPath), " ")
+
+	log.Println(thumber)
+
+	execCommand(thumber)
+
+	return thumbPath
+	//uploadFile(thumbPath)
 }
 
 type Thumbnail struct {

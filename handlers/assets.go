@@ -64,7 +64,7 @@ func (self *Assets) Post(request *gottp.Request) {
 	request.Write(db.M{
 		"_id":        _id,
 		"url":        "/assets/" + _id,
-		"upload_url": getSignedURL(asset.Bucket, asset.Path, asset.MimeType, true),
+		"upload_url": getSignedUploadURL(asset.Bucket, asset.Path, asset.MimeType),
 	})
 
 	return
