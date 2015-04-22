@@ -1,12 +1,21 @@
 package handlers
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
 
 	"gopkg.in/simversity/gottp.v2"
+
+	"os/exec"
+	"strings"
 )
+
+type cmdStruct struct {
+	Command string
+	Args    []string
+}
 
 const thumbCmd = "ffmpeg -i %v -ss 00:00:01 -vframes 1 -vf scale=-1:600 %v"
 const canvasCmd = "composite -gravity center %v %v %v"
@@ -16,17 +25,30 @@ const mogCmd = "mogrify -resize 640x480 %v"
 const CANVAS_PATH = "/tmp/black_canvas.png"
 const PLAY_ICON_PATH = "/tmp/playiconhover.png"
 
-func generateThumbnail(bucket, videoUrl string) {
-	thumbPath := "/tmp/thumbPath.png"
-	url := getSignedURL(bucket, videoUrl)
+func execCommand(command []string) {
+	err := exec.Command(command[0], command[1:len(command)]...).Run()
+	if err != nil {
+		panic(errors.New("Error in executable : " + command[0] + " " + err.Error()))
+	}
+}
 
-	thumber := fmt.Sprintf(thumbCmd, url, thumbPath)
-	canvaser := fmt.Sprintf(canvasCmd, thumbPath, CANVAS_PATH, thumbPath)
-	iconer := fmt.Sprintf(iconCmd, PLAY_ICON_PATH, thumbPath, thumbPath)
-	mogrifier := fmt.Sprintf(mogCmd, thumbPath)
+func generateThumbnail(bucket, videoUrl, mimetype string) {
+	thumbPath := "/tmp/thumbPath.png"
+	url := getSignedURL(bucket, videoUrl, mimetype, true)
+
+	thumber := strings.Split(fmt.Sprintf(thumbCmd, url, thumbPath), " ")
+	canvaser := strings.Split(fmt.Sprintf(canvasCmd, thumbPath, CANVAS_PATH, thumbPath), " ")
+	iconer := strings.Split(fmt.Sprintf(iconCmd, thumbPath, PLAY_ICON_PATH, thumbPath), " ")
+	mogrifier := strings.Split(fmt.Sprintf(mogCmd, thumbPath), " ")
+
+	log.Println(thumber, canvaser, iconer, mogrifier)
+
+	execCommand(thumber)
+	execCommand(canvaser)
+	execCommand(iconer)
+	execCommand(mogrifier)
 
 	uploadFile(thumbPath)
-	log.Println(thumber, canvaser, iconer, mogrifier)
 }
 
 type Thumbnail struct {
