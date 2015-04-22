@@ -9,10 +9,10 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/AdRoll/goamz/aws"
+	"github.com/AdRoll/goamz/s3"
 	"github.com/bulletind/moire/config"
 	"github.com/bulletind/moire/db"
-	"gopkg.in/amz.v3/aws"
-	"gopkg.in/amz.v3/s3"
 )
 
 func getRegion() aws.Region {
@@ -28,9 +28,9 @@ func getBucket(bucket string) *s3.Bucket {
 	region := getRegion()
 
 	connection := s3.New(auth, region)
-	b, err := connection.Bucket(bucket)
-	if err != nil {
-		panic(err)
+	b := connection.Bucket(bucket)
+	if b == nil {
+		panic("Bucket not found.")
 	}
 
 	return b
@@ -50,7 +50,7 @@ func uploadFile(filePath string) {
 	}
 
 	b := getBucket(config.Settings.S3.Bucket)
-	b.Put(filePath, data, fileType, s3.PublicRead)
+	b.Put(filePath, data, fileType, s3.PublicRead, s3.Options{})
 }
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -65,13 +65,14 @@ func randSeq(n int) string {
 	return string(b)
 }
 
-func getSignedURL(bucket, path string) string {
+func getSignedURL(bucket, path, mimetype string, isUpload bool) string {
 	b := getBucket(bucket)
-	url, err := b.SignedURL(path, 60*time.Minute)
-	if err != nil {
-		panic(err)
+	var url = ""
+	if isUpload {
+		url = b.UploadSignedURL(path, "PUT", mimetype, time.Now().Add(time.Hour))
+	} else {
+		url = b.SignedURL(path, time.Now().Add(time.Hour))
 	}
-
 	return url
 }
 
@@ -95,7 +96,10 @@ func getUploadURL(assetId, fileType string) string {
 func getThumbnailURL(asset *db.Asset) (url string, err error) {
 	switch asset.Status {
 	case db.READY:
-		url = getSignedURL(asset.Bucket, asset.ThumbnailPath)
+		if asset.ThumbnailPath == "" {
+			err = errors.New("Ouch! This thumbnail is no longer available.")
+		}
+		url = getSignedURL(asset.Bucket, asset.ThumbnailPath, asset.MimeType, false)
 		break
 	case db.LOST:
 		err = errors.New("Ouch! This thumbnail is no longer available.")
@@ -111,7 +115,7 @@ func getThumbnailURL(asset *db.Asset) (url string, err error) {
 func getURL(asset *db.Asset) (url string, err error) {
 	switch asset.Status {
 	case db.READY:
-		url = getSignedURL(asset.Bucket, asset.Path)
+		url = getSignedURL(asset.Bucket, asset.Path, asset.MimeType, false)
 		break
 	case db.LOST:
 		err = errors.New("Ouch! This content is no longer available.")

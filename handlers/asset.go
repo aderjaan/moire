@@ -48,7 +48,7 @@ func (self *Asset) Post(request *gottp.Request) {
 	conn := getConn()
 	asset := getAsset(conn, _id)
 
-	signedUrl := getSignedURL(asset.Bucket, asset.Path)
+	signedUrl := getSignedURL(asset.Bucket, asset.Path, asset.MimeType, true)
 
 	request.Write(signedUrl)
 	return
