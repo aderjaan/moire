@@ -64,7 +64,10 @@ func (self *SNS) Post(request *gottp.Request) {
 	asset := assetReady(conn, key, record.S3.Bucket.Name, db.M{"$set": doc})
 
 	if strings.HasPrefix(asset.MimeType, VideoFile) {
-		thumbPath := generateThumbnail(asset.Bucket, asset.Path)
+		thumbPath := videoThumbnail(asset.Bucket, asset.Path)
+		uploadFile(thumbPath)
+	} else if strings.HasPrefix(asset.MimeType, ImageFile) {
+		thumbPath := imageThumbnail(asset.Bucket, asset.Path)
 		uploadFile(thumbPath)
 	}
 

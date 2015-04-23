@@ -25,18 +25,19 @@ const mogCmd = "mogrify -resize 640x480 %v"
 const CANVAS_PATH = "/tmp/black_canvas.png"
 const PLAY_ICON_PATH = "/tmp/playiconhover.png"
 
-func execCommand(command []string) {
-	err := exec.Command(command[0], command[1:len(command)]...).Run()
+func execCommand(command string) {
+	log.Println("Executing:", command)
+	cmd := strings.Split(command, " ")
+	err := exec.Command(cmd[0], cmd[1:len(cmd)]...).Run()
 	if err != nil {
-		panic(errors.New("Error in executable : " + command[0] + " " + err.Error()))
+		panic(errors.New("Error in executable : " + cmd[0] + " " + err.Error()))
 	}
 }
 
 func patchPlayIcon(thumbPath string) string {
-	canvaser := strings.Split(fmt.Sprintf(canvasCmd, thumbPath, CANVAS_PATH, thumbPath), " ")
-	iconer := strings.Split(fmt.Sprintf(iconCmd, thumbPath, PLAY_ICON_PATH, thumbPath), " ")
-	mogrifier := strings.Split(fmt.Sprintf(mogCmd, thumbPath), " ")
-	log.Println(canvaser, iconer, mogrifier)
+	canvaser := fmt.Sprintf(canvasCmd, thumbPath, CANVAS_PATH, thumbPath)
+	iconer := fmt.Sprintf(iconCmd, thumbPath, PLAY_ICON_PATH, thumbPath)
+	mogrifier := fmt.Sprintf(mogCmd, thumbPath)
 
 	execCommand(canvaser)
 	execCommand(iconer)
@@ -45,14 +46,22 @@ func patchPlayIcon(thumbPath string) string {
 	return thumbPath
 }
 
-func generateThumbnail(bucket, videoUrl string) string {
+func videoThumbnail(bucket, url string) string {
 	thumbPath := "/tmp/thumbPath.png"
-	url := getSignedURL(bucket, videoUrl)
-	thumber := strings.Split(fmt.Sprintf(thumbCmd, url, thumbPath), " ")
+	signedUrl := getSignedURL(bucket, url)
 
-	log.Println(thumber)
+	videoThumber := fmt.Sprintf(thumbCmd, signedUrl, thumbPath)
+	execCommand(videoThumber)
 
-	execCommand(thumber)
+	return thumbPath
+}
+
+func imageThumbnail(bucket, url string) string {
+	thumbPath := "/tmp/thumbPath.png"
+	signedUrl := getSignedURL(bucket, url)
+
+	imageThumber := fmt.Sprintf(thumbCmd, signedUrl, thumbPath)
+	execCommand(imageThumber)
 
 	return thumbPath
 }
