@@ -100,8 +100,9 @@ func getThumbnailURL(asset *db.Asset) (url string, err error) {
 	case db.READY:
 		if asset.ThumbnailPath == "" {
 			err = errors.New("Ouch! This thumbnail is no longer available.")
+		} else {
+			url = getSignedURL(asset.Bucket, asset.ThumbnailPath)
 		}
-		url = getSignedURL(asset.Bucket, asset.ThumbnailPath)
 		break
 	case db.LOST:
 		err = errors.New("Ouch! This thumbnail is no longer available.")
