@@ -15,6 +15,8 @@ import (
 	"github.com/bulletind/moire/db"
 )
 
+const UploadPrefix = "original_file"
+
 func getRegion() aws.Region {
 	return aws.Regions[config.Settings.S3.Region]
 }
@@ -89,7 +91,7 @@ func getUploadURL(assetId, fileType string) string {
 		url = PlainFile
 	}
 
-	return path.Join(url, assetId, randSeq(10))
+	return path.Join(UploadPrefix, url, assetId, randSeq(10))
 }
 
 func getThumbnailURL(asset *db.Asset) (url string, err error) {

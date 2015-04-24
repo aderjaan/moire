@@ -55,6 +55,15 @@ func (self *SNS) Post(request *gottp.Request) {
 		return
 	}
 
+	if !strings.HasPrefix(key, UploadPrefix) {
+		request.Raise(gottp.HttpError{
+			http.StatusBadRequest,
+			"Skipping path as its not meant to be monitored.",
+		})
+
+		return
+	}
+
 	doc := db.M{
 		"size":   record.S3.Object.Size,
 		"status": db.READY,
