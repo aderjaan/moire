@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 	"net/url"
+	"path"
 	"strings"
 
 	"github.com/bulletind/moire/db"
@@ -72,15 +73,24 @@ func (self *SNS) Post(request *gottp.Request) {
 	conn := getConn()
 	asset := assetReady(conn, key, record.S3.Bucket.Name, db.M{"$set": doc})
 
-	if strings.HasPrefix(asset.MimeType, VideoFile) {
-		thumbPath := videoThumbnail(asset.Bucket, asset.Path)
-		uploadFile(thumbPath)
-	} else if strings.HasPrefix(asset.MimeType, ImageFile) {
-		thumbPath := imageThumbnail(asset.Bucket, asset.Path)
-		uploadFile(thumbPath)
+	assetId := asset.Id.Hex()
+
+	uploadUrl := path.Join("/", "thumbnail", assetId)
+
+	if asset.FileType == VideoFile {
+		thumbPath := videoThumbnail(assetId, asset.Bucket, asset.Path)
+		uploadFile(uploadUrl, thumbPath)
+		updateAsset(conn, assetId, db.M{"$set": db.M{"thumbnail_path": uploadUrl}})
+		cleanupThumbnail(thumbPath)
+
+	} else if asset.FileType == ImageFile {
+		thumbPath := imageThumbnail(assetId, asset.Bucket, asset.Path)
+		uploadFile(uploadUrl, thumbPath)
+		updateAsset(conn, assetId, db.M{"$set": db.M{"thumbnail_path": uploadUrl}})
+		cleanupThumbnail(thumbPath)
 	}
 
-	request.Write("asset " + asset.Id.Hex() + " marked as ready")
+	request.Write("asset " + assetId + " marked as ready")
 }
 
 type snsMessage struct {

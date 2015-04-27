@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"io/ioutil"
+	"log"
 	"math/rand"
 	"mime"
 	"path"
@@ -43,7 +44,7 @@ func guessMimeType(filePath string) string {
 	return mime.TypeByExtension(ext)
 }
 
-func uploadFile(filePath string) {
+func uploadFile(uploadUrl, filePath string) {
 	fileType := guessMimeType(filePath)
 
 	data, err := ioutil.ReadFile(filePath)
@@ -52,7 +53,9 @@ func uploadFile(filePath string) {
 	}
 
 	b := getBucket(config.Settings.S3.Bucket)
-	b.Put(filePath, data, fileType, s3.PublicRead, s3.Options{})
+
+	log.Println("Uploaading:", uploadUrl)
+	b.Put(uploadUrl, data, fileType, s3.PublicRead, s3.Options{})
 }
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")

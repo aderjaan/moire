@@ -8,6 +8,7 @@ import (
 
 	"gopkg.in/simversity/gottp.v2"
 
+	"os"
 	"os/exec"
 	"strings"
 )
@@ -46,9 +47,9 @@ func patchPlayIcon(thumbPath string) string {
 	return thumbPath
 }
 
-func videoThumbnail(bucket, url string) string {
-	thumbPath := "/tmp/thumbPath.png"
+func videoThumbnail(assetId, bucket, url string) string {
 	signedUrl := getSignedURL(bucket, url)
+	thumbPath := fmt.Sprintf("/tmp/%v_thumb.png", assetId)
 
 	videoThumber := fmt.Sprintf(thumbCmd, signedUrl, thumbPath)
 	execCommand(videoThumber)
@@ -56,14 +57,18 @@ func videoThumbnail(bucket, url string) string {
 	return thumbPath
 }
 
-func imageThumbnail(bucket, url string) string {
-	thumbPath := "/tmp/thumbPath.png"
+func imageThumbnail(assetId, bucket, url string) string {
 	signedUrl := getSignedURL(bucket, url)
+	thumbPath := fmt.Sprintf("/tmp/%v_thumb.png", assetId)
 
 	imageThumber := fmt.Sprintf(thumbCmd, signedUrl, thumbPath)
 	execCommand(imageThumber)
 
 	return thumbPath
+}
+
+func cleanupThumbnail(path string) error {
+	return os.Remove(path)
 }
 
 type Thumbnail struct {
