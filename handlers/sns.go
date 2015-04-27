@@ -75,15 +75,15 @@ func (self *SNS) Post(request *gottp.Request) {
 
 	assetId := asset.Id.Hex()
 
-	uploadUrl := path.Join("/", "thumbnail", assetId)
-
 	if asset.FileType == VideoFile {
+		uploadUrl := path.Join("/", "thumbnail", assetId)
 		thumbPath := videoThumbnail(assetId, asset.Bucket, asset.Path)
 		uploadFile(uploadUrl, thumbPath)
 		updateAsset(conn, assetId, db.M{"$set": db.M{"thumbnail_path": uploadUrl}})
 		cleanupThumbnail(thumbPath)
 
 	} else if asset.FileType == ImageFile {
+		uploadUrl := path.Join("/", "thumbnail", assetId)
 		thumbPath := imageThumbnail(assetId, asset.Bucket, asset.Path)
 		uploadFile(uploadUrl, thumbPath)
 		updateAsset(conn, assetId, db.M{"$set": db.M{"thumbnail_path": uploadUrl}})

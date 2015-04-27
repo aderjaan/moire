@@ -44,7 +44,7 @@ func guessMimeType(filePath string) string {
 	return mime.TypeByExtension(ext)
 }
 
-func uploadFile(uploadUrl, filePath string) {
+func uploadFile(uploadUrl, filePath string) string {
 	fileType := guessMimeType(filePath)
 
 	data, err := ioutil.ReadFile(filePath)
@@ -56,6 +56,8 @@ func uploadFile(uploadUrl, filePath string) {
 
 	log.Println("Uploaading:", uploadUrl)
 	b.Put(uploadUrl, data, fileType, s3.PublicRead, s3.Options{})
+
+	return getSignedURL(config.Settings.S3.Bucket, uploadUrl)
 }
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")

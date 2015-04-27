@@ -62,7 +62,7 @@ func assetReady(conn *db.MConn, path, bucket string, doc db.M) *db.Asset {
 	err := conn.FindAndUpdate(db.ASSET, db.M{
 		"path":   path,
 		"bucket": bucket,
-		//"status": db.PENDING,
+		"status": db.PENDING,
 	}, doc, &asset)
 
 	if err != nil {
