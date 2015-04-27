@@ -9,6 +9,7 @@ import (
 
 	"github.com/bulletind/moire/db"
 	"gopkg.in/simversity/gottp.v2"
+	"gopkg.in/simversity/gottp.v2/utils"
 
 	"os"
 	"os/exec"
@@ -20,7 +21,7 @@ type cmdStruct struct {
 	Args    []string
 }
 
-const thumbCmd = "ffmpeg -i %v -ss 00:00:1 -vframes 1 -vf scale=-1:600 %v"
+const thumbCmd = "ffmpeg -i %v -ss %02d:%02d:%d -vframes 1 -vf scale=-1:600 %v"
 const canvasCmd = "composite -gravity center %v %v %v"
 const iconCmd = "composite -gravity center %v %v %v"
 const mogCmd = "mogrify -resize 640x480 %v"
@@ -49,11 +50,27 @@ func patchPlayIcon(thumbPath string) string {
 	return thumbPath
 }
 
-func videoThumbnail(assetId, bucket, url string) string {
+func videoThumbnail(assetId, bucket, url string, duration int) string {
+	hour := 0
+	minute := 0
+	second := duration
+
+	if second > 60 {
+		minute = duration / 60
+		second = duration % 60
+	}
+
+	if minute > 60 {
+		hour = minute / 60
+		minute = minute % 60
+	}
+
 	signedUrl := getSignedURL(bucket, url)
 	thumbPath := fmt.Sprintf("/tmp/%v_thumb.png", assetId)
 
-	videoThumber := fmt.Sprintf(thumbCmd, signedUrl, thumbPath)
+	cleanupThumbnail(thumbPath)
+
+	videoThumber := fmt.Sprintf(thumbCmd, signedUrl, hour, minute, second, thumbPath)
 	execCommand(videoThumber)
 
 	return thumbPath
@@ -62,6 +79,8 @@ func videoThumbnail(assetId, bucket, url string) string {
 func imageThumbnail(assetId, bucket, url string) string {
 	signedUrl := getSignedURL(bucket, url)
 	thumbPath := fmt.Sprintf("/tmp/%v_thumb.png", assetId)
+
+	cleanupThumbnail(thumbPath)
 
 	imageThumber := fmt.Sprintf(thumbCmd, signedUrl, thumbPath)
 	execCommand(imageThumber)
@@ -76,8 +95,8 @@ func cleanupThumbnail(path string) error {
 const TemporaryRedirect = 302
 
 type thumbArgs struct {
-	ThumbTime     string `json:"thumb_time" required:"true"`
-	PatchPlayIcon bool   `json:"patch_play_icon" required:"thumb_time"`
+	Time      int  `json:"time" required:"true"`
+	PatchIcon bool `json:"patch_icon" required:"thumb_time"`
 }
 
 type Thumbnail struct {
@@ -121,6 +140,16 @@ func (self *Thumbnail) Post(request *gottp.Request) {
 	args := thumbArgs{}
 	request.ConvertArguments(&args)
 
+	errs := utils.Validate(&args)
+	if len(*errs) > 0 {
+		request.Raise(gottp.HttpError{
+			http.StatusBadRequest,
+			ConcatenateErrors(errs),
+		})
+
+		return
+	}
+
 	_id, ok := request.GetArgument("_id").(string)
 	if !ok {
 		request.Raise(gottp.HttpError{
@@ -133,15 +162,16 @@ func (self *Thumbnail) Post(request *gottp.Request) {
 
 	conn := getConn()
 	asset := getAsset(conn, _id)
-
 	assetId := asset.Id.Hex()
 
 	var thumbPath string
 
 	if asset.FileType == VideoFile {
-		thumbPath = videoThumbnail(assetId, asset.Bucket, asset.Path)
+		thumbPath = videoThumbnail(assetId, asset.Bucket, asset.Path, args.Time)
+
 	} else if asset.FileType == ImageFile {
 		thumbPath = imageThumbnail(assetId, asset.Bucket, asset.Path)
+
 	} else {
 		request.Raise(gottp.HttpError{
 			http.StatusConflict,
