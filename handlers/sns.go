@@ -56,10 +56,10 @@ func (self *SNS) Post(request *gottp.Request) {
 		return
 	}
 
-	if !strings.HasPrefix(key, UPLOAD_PREFIX) {
+	if !strings.HasPrefix(key, UploadPrefix) {
 		request.Raise(gottp.HttpError{
-			http.StatusNotAllowed,
-			"Ignoring path to be monitored.",
+			http.StatusBadRequest,
+			"Skipping path as its not meant to be monitored.",
 		})
 
 		return
