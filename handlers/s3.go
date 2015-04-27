@@ -3,7 +3,6 @@ package handlers
 import (
 	"errors"
 	"io/ioutil"
-	"log"
 	"math/rand"
 	"mime"
 	"path"
@@ -72,7 +71,6 @@ func getSignedUploadURL(bucket, path, mimetype string) string {
 	expiry := time.Hour * 24 * 365
 	b := getBucket(bucket)
 	url := b.UploadSignedURL(path, "PUT", mimetype, time.Now().Add(expiry))
-	log.Println(path, url, mimetype)
 	return url
 }
 
