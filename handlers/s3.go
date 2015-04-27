@@ -15,6 +15,8 @@ import (
 	"github.com/bulletind/moire/db"
 )
 
+const UploadPrefix = "original_file"
+
 func getRegion() aws.Region {
 	return aws.Regions[config.Settings.S3.Region]
 }
@@ -66,8 +68,10 @@ func randSeq(n int) string {
 }
 
 func getSignedUploadURL(bucket, path, mimetype string) string {
+	expiry := time.Hour * 24 * 365
 	b := getBucket(bucket)
-	return b.UploadSignedURL(path, "PUT", mimetype, time.Now().Add(time.Hour))
+	url := b.UploadSignedURL(path, "PUT", mimetype, time.Now().Add(expiry))
+	return url
 }
 
 func getSignedURL(bucket, path string) string {
@@ -75,21 +79,9 @@ func getSignedURL(bucket, path string) string {
 	return b.SignedURL(path, time.Now().Add(time.Hour))
 }
 
-func getUploadURL(assetId, fileType string) string {
-	var url string
-
-	switch fileType {
-	case ImageFile:
-		url = ImageFile
-	case VideoFile:
-		url = VideoFile
-	case AudioFile:
-		url = AudioFile
-	default:
-		url = PlainFile
-	}
-
-	return path.Join(url, assetId, randSeq(10))
+func getUploadURL(assetId string) string {
+	seperator := "/"
+	return path.Join(seperator, UploadPrefix, assetId, randSeq(10))
 }
 
 func getThumbnailURL(asset *db.Asset) (url string, err error) {
@@ -97,8 +89,9 @@ func getThumbnailURL(asset *db.Asset) (url string, err error) {
 	case db.READY:
 		if asset.ThumbnailPath == "" {
 			err = errors.New("Ouch! This thumbnail is no longer available.")
+		} else {
+			url = getSignedURL(asset.Bucket, asset.ThumbnailPath)
 		}
-		url = getSignedURL(asset.Bucket, asset.ThumbnailPath)
 		break
 	case db.LOST:
 		err = errors.New("Ouch! This thumbnail is no longer available.")

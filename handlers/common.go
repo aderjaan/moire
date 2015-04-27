@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"strings"
+
 	"github.com/bulletind/moire/config"
 	"github.com/bulletind/moire/db"
 	"gopkg.in/mgo.v2/bson"
@@ -53,6 +55,10 @@ func getAsset(conn *db.MConn, _id string) *db.Asset {
 func assetReady(conn *db.MConn, path, bucket string, doc db.M) *db.Asset {
 	var asset db.Asset
 
+	if !strings.HasPrefix(path, "/") {
+		path = "/" + path
+	}
+
 	err := conn.FindAndUpdate(db.ASSET, db.M{
 		"path":   path,
 		"bucket": bucket,
@@ -77,7 +83,7 @@ func createAsset(conn *db.MConn, args *assetArgs) *db.Asset {
 		FileType:  args.fileType,
 		MimeType:  args.MimeType,
 		Status:    db.PENDING,
-		Path:      getUploadURL(assetId.Hex(), args.fileType),
+		Path:      getUploadURL(assetId.Hex()),
 	}
 
 	conn.Insert(db.ASSET, &asset)
