@@ -16,10 +16,10 @@ import (
 	"github.com/bulletind/moire/db"
 	"github.com/nfnt/resize"
 	"gopkg.in/simversity/gottp.v2"
-	"gopkg.in/simversity/gottp.v2/utils"
 
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 )
 
@@ -28,7 +28,7 @@ type cmdStruct struct {
 	Args    []string
 }
 
-const thumbCmd = "ffmpeg -i \"%v\" -ss %02d:%02d:%d -vframes 1 -vf scale=-1:600 %v"
+const thumbCmd = "ffmpeg -i \"%v\" -ss %02d:%02d:%d -vframes 1 -vf scale=\"%v:-1\" %v"
 
 const canvasCmd = "composite -gravity center %v %v %v"
 const iconCmd = "composite -gravity center %v %v %v"
@@ -37,8 +37,9 @@ const mogCmd = "mogrify -resize 640x480 %v"
 const CANVAS_PATH = "/tmp/black_canvas.png"
 const PLAY_ICON_PATH = "/tmp/playiconhover.png"
 
-const thumbX uint = 320
-const thumbY uint = 240
+const thumbTime int = 1
+const thumbX int = 320
+const thumbY int = 240
 
 func execCommand(command string) {
 	log.Println("Executing:", command)
@@ -61,7 +62,7 @@ func patchPlayIcon(thumbPath string) string {
 	return thumbPath
 }
 
-func videoThumbnail(assetId, bucket, url string, duration int) string {
+func videoThumbnail(assetId, bucket, url string, duration, sizeX, sizeY int) string {
 	hour := 0
 	minute := 0
 	second := duration
@@ -81,7 +82,7 @@ func videoThumbnail(assetId, bucket, url string, duration int) string {
 
 	cleanupThumbnail(thumbPath)
 
-	videoThumber := fmt.Sprintf(thumbCmd, signedUrl, hour, minute, second, thumbPath)
+	videoThumber := fmt.Sprintf(thumbCmd, signedUrl, hour, minute, second, sizeX, thumbPath)
 	execCommand(videoThumber)
 
 	return thumbPath
@@ -118,26 +119,23 @@ func getImage(rc io.Reader) (img image.Image, ft string, err error) {
 	return
 }
 
-func imageThumbnail(assetId, bucket, url string, sizeX, sizeY uint) string {
-	//gcd := getGCD(sizeX, sizeY)
-	//aspect := fmt.Sprintf("%v/%v", sizeX/gcd, sizeY/gcd)
-
+func imageThumbnail(assetId, bucket, url string, sizeX, sizeY int) string {
 	thumbPath := fmt.Sprintf("/tmp/%v_thumb.png", assetId)
 	cleanupThumbnail(thumbPath)
 
 	rc, err := getS3Reader(bucket, url)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	defer rc.Close()
 
 	img, _, err := getImage(rc)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
-	m := resize.Thumbnail(sizeX, sizeY, img, resize.Lanczos3)
+	m := resize.Thumbnail(uint(sizeX), uint(sizeY), img, resize.Lanczos3)
 
 	out, err := os.Create(thumbPath)
 	if err != nil {
@@ -161,8 +159,9 @@ func cleanupThumbnail(path string) error {
 const TemporaryRedirect = 302
 
 type thumbArgs struct {
-	Time      int  `json:"time" required:"true"`
-	PatchIcon bool `json:"patch_icon" required:"thumb_time"`
+	Time string `json:"time"`
+	X    string `json:"x"`
+	Y    string `json:"y"`
 }
 
 type Thumbnail struct {
@@ -172,11 +171,7 @@ type Thumbnail struct {
 func (self *Thumbnail) Get(request *gottp.Request) {
 	_id, ok := request.GetArgument("_id").(string)
 	if !ok {
-		request.Raise(gottp.HttpError{
-			http.StatusNotFound,
-			"Not found",
-		})
-
+		request.Raise(gottp.HttpError{http.StatusNotFound, "Not found"})
 		return
 	}
 
@@ -192,78 +187,64 @@ func (self *Thumbnail) Get(request *gottp.Request) {
 		return
 	}
 
-	url, err := getThumbnailURL(asset)
-	if err != nil {
-		getPlaceHolder(request.Writer, err.Error())
-	} else {
-		request.Redirect(url, TemporaryRedirect)
-	}
-
-	return
-}
-
-func (self *Thumbnail) Post(request *gottp.Request) {
-	//Allows you to create a new thumbnial for the Video files at the provided
-	//time (in seconds) argument.
-	//This POST call is pretty much meaningless for all non-video file formats.
-
 	args := thumbArgs{}
 	request.ConvertArguments(&args)
 
-	errs := utils.Validate(&args)
-	if len(*errs) > 0 {
-		request.Raise(gottp.HttpError{
-			http.StatusBadRequest,
-			ConcatenateErrors(errs),
-		})
+	var err error
+	var thumbUrl string
 
-		return
-	}
-
-	_id, ok := request.GetArgument("_id").(string)
-	if !ok {
-		request.Raise(gottp.HttpError{
-			http.StatusNotFound,
-			"Not found",
-		})
-
-		return
-	}
-
-	conn := getConn()
-	asset := getAsset(conn, _id)
-	assetId := asset.Id.Hex()
-
-	var thumbPath string
-
-	if asset.FileType == VideoFile {
-		thumbPath = videoThumbnail(assetId, asset.Bucket, asset.Path, args.Time)
-
-	} else if asset.FileType == ImageFile {
-		thumbPath = imageThumbnail(assetId, asset.Bucket, asset.Path, thumbX, thumbY)
-
-	} else {
-		request.Raise(gottp.HttpError{
-			http.StatusConflict,
-			"Can only generate thumbnails for Image and Video files.",
-		})
-
-		return
-	}
-
-	_, err := getThumbnailURL(asset)
-	if err != nil {
+	if thumbUrl, err = getThumbnailURL(asset); err != nil {
 		getPlaceHolder(request.Writer, err.Error())
 		return
 	}
 
-	uploadUrl := path.Join("/", "thumbnail", assetId)
-	signed_url := uploadFile(uploadUrl, thumbPath)
-	updateAsset(conn, assetId, db.M{"$set": db.M{"thumbnail_path": uploadUrl}})
-	cleanupThumbnail(thumbPath)
+	if args.Time+args.X+args.Y != "" {
+		time, _ := strconv.Atoi(args.Time)
+		if time == 0 {
+			time = thumbTime
+		}
 
-	request.Write(signed_url)
-	//request.Redirect(signed_url, TemporaryRedirect)
+		x, _ := strconv.Atoi(args.X)
+		if x == 0 {
+			x = thumbX
+		}
 
+		y, _ := strconv.Atoi(args.Y)
+		if y == 0 {
+			y = thumbY
+		}
+
+		cacheKey := fmt.Sprintf("%v_%v_%v", time, x, y)
+
+		if thumbUrl, ok = asset.Thumbnails[cacheKey]; !ok {
+
+			assetId := asset.Id.Hex()
+			var thumbPath string
+
+			if asset.FileType == VideoFile {
+				thumbPath = videoThumbnail(assetId, asset.Bucket, asset.Path, time, x, y)
+
+			} else if asset.FileType == ImageFile {
+				thumbPath = imageThumbnail(assetId, asset.Bucket, asset.Path, x, y)
+
+			} else {
+				request.Raise(gottp.HttpError{
+					http.StatusConflict,
+					"Can only generate thumbnails for Image and Video files.",
+				})
+
+				return
+			}
+
+			thumbUrl = path.Join("/", "thumbnail", assetId, cacheKey)
+			uploadFile(asset.Bucket, thumbUrl, thumbPath)
+
+			updateAsset(conn, assetId, db.M{"$set": db.M{"thumbnails." + cacheKey: thumbUrl}})
+			cleanupThumbnail(thumbPath)
+		}
+	}
+
+	signed_url := getSignedURL(asset.Bucket, thumbUrl)
+	request.Redirect(signed_url, TemporaryRedirect)
 	return
 }

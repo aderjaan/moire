@@ -45,7 +45,7 @@ func guessMimeType(filePath string) string {
 	return mime.TypeByExtension(ext)
 }
 
-func uploadFile(uploadUrl, filePath string) string {
+func uploadFile(bucket, uploadUrl, filePath string) {
 	fileType := guessMimeType(filePath)
 
 	data, err := ioutil.ReadFile(filePath)
@@ -53,12 +53,10 @@ func uploadFile(uploadUrl, filePath string) string {
 		panic(err)
 	}
 
-	b := getBucket(config.Settings.S3.Bucket)
+	b := getBucket(bucket)
 
 	log.Println("Uploaading:", uploadUrl)
 	b.Put(uploadUrl, data, fileType, s3.PublicRead, s3.Options{})
-
-	return getSignedURL(config.Settings.S3.Bucket, uploadUrl)
 }
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -101,7 +99,7 @@ func getThumbnailURL(asset *db.Asset) (url string, err error) {
 		if asset.ThumbnailPath == "" {
 			err = errors.New("Ouch! This thumbnail is no longer available.")
 		} else {
-			url = getSignedURL(asset.Bucket, asset.ThumbnailPath)
+			url = asset.ThumbnailPath
 		}
 		break
 	case db.LOST:
