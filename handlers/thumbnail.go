@@ -3,11 +3,18 @@ package handlers
 import (
 	"errors"
 	"fmt"
+	"image"
+	"image/gif"
+	"image/jpeg"
+	"image/png"
+	"io"
 	"log"
+	"math/big"
 	"net/http"
 	"path"
 
 	"github.com/bulletind/moire/db"
+	"github.com/nfnt/resize"
 	"gopkg.in/simversity/gottp.v2"
 	"gopkg.in/simversity/gottp.v2/utils"
 
@@ -21,13 +28,17 @@ type cmdStruct struct {
 	Args    []string
 }
 
-const thumbCmd = "ffmpeg -i %v -ss %02d:%02d:%d -vframes 1 -vf scale=-1:600 %v"
+const thumbCmd = "ffmpeg -i \"%v\" -ss %02d:%02d:%d -vframes 1 -vf scale=-1:600 %v"
+
 const canvasCmd = "composite -gravity center %v %v %v"
 const iconCmd = "composite -gravity center %v %v %v"
 const mogCmd = "mogrify -resize 640x480 %v"
 
 const CANVAS_PATH = "/tmp/black_canvas.png"
 const PLAY_ICON_PATH = "/tmp/playiconhover.png"
+
+const thumbX uint = 320
+const thumbY uint = 240
 
 func execCommand(command string) {
 	log.Println("Executing:", command)
@@ -76,14 +87,69 @@ func videoThumbnail(assetId, bucket, url string, duration int) string {
 	return thumbPath
 }
 
-func imageThumbnail(assetId, bucket, url string) string {
-	signedUrl := getSignedURL(bucket, url)
-	thumbPath := fmt.Sprintf("/tmp/%v_thumb.png", assetId)
+func getGCD(x, y int64) int64 {
+	gcd := new(big.Int).GCD(nil, nil, big.NewInt(x), big.NewInt(y)).Int64()
+	return gcd
+}
 
+func getImage(rc io.Reader) (img image.Image, ft string, err error) {
+	img, ft, err = image.Decode(rc)
+	if err == nil {
+		return
+	}
+
+	img, err = png.Decode(rc)
+	if err == nil {
+		ft = "png"
+		return
+	}
+
+	img, err = jpeg.Decode(rc)
+	if err == nil {
+		ft = "jpeg"
+		return
+	}
+
+	img, err = gif.Decode(rc)
+	if err == nil {
+		ft = "gif"
+	}
+
+	return
+}
+
+func imageThumbnail(assetId, bucket, url string, sizeX, sizeY uint) string {
+	//gcd := getGCD(sizeX, sizeY)
+	//aspect := fmt.Sprintf("%v/%v", sizeX/gcd, sizeY/gcd)
+
+	thumbPath := fmt.Sprintf("/tmp/%v_thumb.png", assetId)
 	cleanupThumbnail(thumbPath)
 
-	imageThumber := fmt.Sprintf(thumbCmd, signedUrl, thumbPath)
-	execCommand(imageThumber)
+	rc, err := getS3Reader(bucket, url)
+	if err != nil {
+		panic(err)
+	}
+
+	defer rc.Close()
+
+	img, _, err := getImage(rc)
+	if err != nil {
+		panic(err)
+	}
+
+	m := resize.Thumbnail(sizeX, sizeY, img, resize.Lanczos3)
+
+	out, err := os.Create(thumbPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer out.Close()
+
+	// write new image to file
+	if err := png.Encode(out, m); err != nil {
+		log.Fatal(err)
+	}
 
 	return thumbPath
 }
@@ -137,6 +203,10 @@ func (self *Thumbnail) Get(request *gottp.Request) {
 }
 
 func (self *Thumbnail) Post(request *gottp.Request) {
+	//Allows you to create a new thumbnial for the Video files at the provided
+	//time (in seconds) argument.
+	//This POST call is pretty much meaningless for all non-video file formats.
+
 	args := thumbArgs{}
 	request.ConvertArguments(&args)
 
@@ -170,7 +240,7 @@ func (self *Thumbnail) Post(request *gottp.Request) {
 		thumbPath = videoThumbnail(assetId, asset.Bucket, asset.Path, args.Time)
 
 	} else if asset.FileType == ImageFile {
-		thumbPath = imageThumbnail(assetId, asset.Bucket, asset.Path)
+		thumbPath = imageThumbnail(assetId, asset.Bucket, asset.Path, thumbX, thumbY)
 
 	} else {
 		request.Raise(gottp.HttpError{

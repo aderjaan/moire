@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"io"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -77,6 +78,11 @@ func getSignedUploadURL(bucket, path, mimetype string) string {
 	b := getBucket(bucket)
 	url := b.UploadSignedURL(path, "PUT", mimetype, time.Now().Add(expiry))
 	return url
+}
+
+func getS3Reader(bucket, path string) (io.ReadCloser, error) {
+	b := getBucket(bucket)
+	return b.GetReader(path)
 }
 
 func getSignedURL(bucket, path string) string {
