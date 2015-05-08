@@ -1,0 +1,22 @@
+language: go
+go:
+- tip
+
+env:
+  global:
+    - PATH=$HOME/gopath/bin:$HOME/bin:$PATH
+    - ARTIFACTS_WORKING_DIR: $HOME/gopath/bin
+    - ARTIFACTS_TARGET_PATHS="$TRAVIS_BRANCH/$TRAVIS_JOB_NUMBER:$TRAVIS_BRANCH/latest"
+    - ARTIFACTS_PERMISSIONS=public-read
+    - ARTIFACTS_CACHE_CONTROL='public, max-age=315360000'
+    - ARTIFACTS_LOG_FORMAT=multiline
+    - ARTIFACTS_DEBUG=1
+
+before_script:
+  - curl -sL https://raw.githubusercontent.com/travis-ci/artifacts/master/install | bash
+
+script:
+  - go build -v ./...
+
+after_success:
+  - artifacts upload $HOME/gopath/bin/moire
