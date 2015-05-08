@@ -10,6 +10,7 @@ const (
 )
 
 type Asset struct {
+	History       []string
 	Id            bson.ObjectId     `json:"_id,omitempty" bson:"_id",omitempty`
 	Size          int64             `json:"size" bson:"size"`
 	CreatedOn     int64             `json:"created_on" bson:"created_on"`
@@ -20,6 +21,5 @@ type Asset struct {
 	Path          string            `json:"path" bson:"path"`
 	ThumbnailPath string            `json:"thumbnail_path" bson:"thumbnail_path"`
 	Status        string            `json:"status" bson:"status"`
-	History       []string          `json:"-" bson:"history"`
 	Thumbnails    map[string]string `json:"-" bson:"thumbnails"`
 }
