@@ -18,6 +18,9 @@ import (
 )
 
 const UploadPrefix = "original_file"
+const pendingUrl = "http://s3-eu-west-1.amazonaws.com/sc-gallery/thumbnail.png"
+const attachmentUrl = "http://s3-eu-west-1.amazonaws.com/sc-gallery/attachment.png"
+const missingUrl = "http://s3-eu-west-1.amazonaws.com/sc-gallery/missing.png"
 
 func getRegion() aws.Region {
 	return aws.Regions[config.Settings.S3.Region]
@@ -94,18 +97,27 @@ func getUploadURL(assetId string) string {
 }
 
 func getThumbnailURL(asset *db.Asset) (url string, err error) {
+	if asset.FileType != VideoFile && asset.FileType != ImageFile {
+		err = errors.New("Can only generate thumbnails for Image and Video files.")
+		url = attachmentUrl
+		return
+	}
+
 	switch asset.Status {
 	case db.READY:
 		if asset.ThumbnailPath == "" {
+			url = missingUrl
 			err = errors.New("Ouch! This thumbnail is no longer available.")
 		} else {
 			url = asset.ThumbnailPath
 		}
 		break
 	case db.LOST:
+		url = missingUrl
 		err = errors.New("Ouch! This thumbnail is no longer available.")
 		break
 	default:
+		url = pendingUrl
 		err = errors.New("Hmm! Thumbnail was not found as the content is still being uploaded.")
 		break
 	}
@@ -122,7 +134,11 @@ func getURL(asset *db.Asset) (url string, err error) {
 		err = errors.New("Ouch! This content is no longer available.")
 		break
 	default:
-		err = errors.New("This content is still being uploaded. We appreciate your impatience")
+		if asset.FileType == ImageFile {
+			url = pendingUrl
+		} else {
+			err = errors.New("This content is still being uploaded. We appreciate your impatience")
+		}
 		break
 	}
 

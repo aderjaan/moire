@@ -62,7 +62,11 @@ func patchPlayIcon(thumbPath string) string {
 	return thumbPath
 }
 
-func videoThumbnail(assetId, bucket, url string, duration, sizeX, sizeY int) string {
+func videoThumbnail(asset *db.Asset, duration, sizeX, sizeY int) string {
+	assetId := asset.Id
+	bucket := asset.Bucket
+	path := asset.Path
+
 	hour := 0
 	minute := 0
 	second := duration
@@ -77,7 +81,7 @@ func videoThumbnail(assetId, bucket, url string, duration, sizeX, sizeY int) str
 		minute = minute % 60
 	}
 
-	signedUrl := getSignedURL(bucket, url)
+	signedUrl := getSignedURL(bucket, path)
 	thumbPath := fmt.Sprintf("/tmp/%v_thumb.png", assetId)
 
 	cleanupThumbnail(thumbPath)
@@ -119,11 +123,15 @@ func getImage(rc io.Reader) (img image.Image, ft string, err error) {
 	return
 }
 
-func imageThumbnail(assetId, bucket, url string, sizeX, sizeY int) string {
+func imageThumbnail(asset *db.Asset, sizeX, sizeY int) string {
+	assetId := asset.Id
+	bucket := asset.Bucket
+	path := asset.Path
+
 	thumbPath := fmt.Sprintf("/tmp/%v_thumb.png", assetId)
 	cleanupThumbnail(thumbPath)
 
-	rc, err := getS3Reader(bucket, url)
+	rc, err := getS3Reader(bucket, path)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -178,25 +186,16 @@ func (self *Thumbnail) Get(request *gottp.Request) {
 	conn := getConn()
 	asset := getAsset(conn, _id)
 
-	if asset.FileType != VideoFile && asset.FileType != ImageFile {
-		request.Raise(gottp.HttpError{
-			http.StatusNotFound,
-			"Can only generate thumbnails for Image and Video files.",
-		})
-
-		return
-	}
-
 	args := thumbArgs{}
 	request.ConvertArguments(&args)
 
-	var err error
-	var thumbUrl string
-
-	if thumbUrl, err = getThumbnailURL(asset); err != nil {
-		getPlaceHolder(request.Writer, err.Error())
+	signedUrl, err := getThumbnailURL(asset)
+	if err != nil {
+		request.Redirect(signedUrl, TemporaryRedirect)
 		return
 	}
+
+	var thumbUrl string
 
 	if args.Time+args.X+args.Y != "" {
 		time, _ := strconv.Atoi(args.Time)
@@ -222,10 +221,10 @@ func (self *Thumbnail) Get(request *gottp.Request) {
 			var thumbPath string
 
 			if asset.FileType == VideoFile {
-				thumbPath = videoThumbnail(assetId, asset.Bucket, asset.Path, time, x, y)
+				thumbPath = videoThumbnail(asset, time, x, y)
 
 			} else if asset.FileType == ImageFile {
-				thumbPath = imageThumbnail(assetId, asset.Bucket, asset.Path, x, y)
+				thumbPath = imageThumbnail(asset, x, y)
 
 			} else {
 				request.Raise(gottp.HttpError{

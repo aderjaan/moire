@@ -26,7 +26,11 @@ func (self *Asset) Get(request *gottp.Request) {
 
 	url, err := getURL(asset)
 	if err != nil {
-		getPlaceHolder(request.Writer, err.Error())
+		request.Raise(gottp.HttpError{
+			http.StatusNotFound,
+			err.Error(),
+		})
+
 	} else {
 		request.Redirect(url, 302)
 	}
