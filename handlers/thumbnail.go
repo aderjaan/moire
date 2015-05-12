@@ -189,13 +189,15 @@ func (self *Thumbnail) Get(request *gottp.Request) {
 	args := thumbArgs{}
 	request.ConvertArguments(&args)
 
+	var thumbUrl string
+
 	signedUrl, err := getThumbnailURL(asset)
 	if err != nil {
 		request.Redirect(signedUrl, TemporaryRedirect)
 		return
+	} else if signedUrl == "" {
+		thumbUrl = signedUrl
 	}
-
-	var thumbUrl string
 
 	if args.Time+args.X+args.Y != "" {
 		time, _ := strconv.Atoi(args.Time)
