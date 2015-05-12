@@ -15,26 +15,25 @@ type SNS struct {
 	gottp.BaseHandler
 }
 
+func parseMessage(n snsNotice) (msg snsMessage, errs *[]error) {
+	errs = utils.Validate(&n)
+	if len(*errs) > 0 {
+		return
+	}
+
+	utils.Decoder([]byte(n.Message), &msg)
+
+	errs = utils.Validate(&msg)
+	return
+}
+
 func (self *SNS) Post(request *gottp.Request) {
 	var errs *[]error
 
 	n := snsNotice{}
 	request.ConvertArguments(&n)
 
-	errs = utils.Validate(&n)
-	if len(*errs) > 0 {
-		request.Raise(gottp.HttpError{
-			http.StatusBadRequest,
-			ConcatenateErrors(errs),
-		})
-
-		return
-	}
-
-	msg := snsMessage{}
-	utils.Decoder([]byte(n.Message), &msg)
-
-	errs = utils.Validate(&msg)
+	msg, errs := parseMessage(n)
 	if len(*errs) > 0 {
 		request.Raise(gottp.HttpError{
 			http.StatusBadRequest,
