@@ -17,6 +17,7 @@ before_script:
   - curl -sL https://raw.githubusercontent.com/travis-ci/artifacts/master/install | bash
 
 script:
+  - go test -v ./...
   - go build -v ./...
 
 after_success:
