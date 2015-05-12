@@ -195,7 +195,7 @@ func (self *Thumbnail) Get(request *gottp.Request) {
 	if err != nil {
 		request.Redirect(signedUrl, TemporaryRedirect)
 		return
-	} else if signedUrl == "" {
+	} else if signedUrl != "" {
 		thumbUrl = signedUrl
 	}
 
