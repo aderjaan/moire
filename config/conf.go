@@ -19,6 +19,7 @@ type config struct {
 		Debug                bool
 		DBUsername           string
 		DBPassword           string
+		FFmpeg               string
 	}
 }
 
@@ -26,6 +27,7 @@ func (self *config) MakeConfig(configPath string) {
 	self.Gottp.Listen = "127.0.0.1:8811"
 	self.Moire.DBAddress = "127.0.0.1:27017"
 	self.Moire.DBName = "gallery"
+	self.Moire.FFmpeg = "ffmpeg"
 
 	self.S3.Region = "eu-west-1"
 	self.S3.Bucket = "moire-gallery"

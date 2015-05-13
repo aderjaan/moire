@@ -13,7 +13,9 @@ import (
 	"net/http"
 	"path"
 
+	"github.com/bulletind/moire/config"
 	"github.com/bulletind/moire/db"
+
 	"github.com/nfnt/resize"
 	"gopkg.in/simversity/gottp.v2"
 
@@ -28,7 +30,7 @@ type cmdStruct struct {
 	Args    []string
 }
 
-const thumbCmd = "ffmpeg -i \"%v\" -ss %02d:%02d:%d -vframes 1 -vf scale=\"%v:-1\" %v"
+const thumbCmd = "%v -i \"%v\" -ss %02d:%02d:%d -vframes 1 -vf scale=\"%v:-1\" %v"
 
 const canvasCmd = "composite -gravity center %v %v %v"
 const iconCmd = "composite -gravity center %v %v %v"
@@ -86,7 +88,7 @@ func videoThumbnail(asset *db.Asset, duration, sizeX, sizeY int) string {
 
 	cleanupThumbnail(thumbPath)
 
-	videoThumber := fmt.Sprintf(thumbCmd, signedUrl, hour, minute, second, sizeX, thumbPath)
+	videoThumber := fmt.Sprintf(thumbCmd, config.Settings.Moire.FFmpeg, signedUrl, hour, minute, second, sizeX, thumbPath)
 	execCommand(videoThumber)
 
 	return thumbPath
