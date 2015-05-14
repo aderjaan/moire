@@ -65,7 +65,7 @@ func patchPlayIcon(thumbPath string) string {
 }
 
 func videoThumbnail(asset *db.Asset, duration, sizeX, sizeY int) string {
-	assetId := asset.Id
+	assetId := asset.Id.Hex()
 	bucket := asset.Bucket
 	path := asset.Path
 
@@ -126,7 +126,7 @@ func getImage(rc io.Reader) (img image.Image, ft string, err error) {
 }
 
 func imageThumbnail(asset *db.Asset, sizeX, sizeY int) string {
-	assetId := asset.Id
+	assetId := asset.Id.Hex()
 	bucket := asset.Bucket
 	path := asset.Path
 
