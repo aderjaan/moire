@@ -30,44 +30,58 @@ type cmdStruct struct {
 	Args    []string
 }
 
-const thumbCmd = "%v -i \"%v\" -ss %02d:%02d:%d -vframes 1 -vf scale=\"%v:-1\" %v"
-
-const canvasCmd = "composite -gravity center %v %v %v"
-const iconCmd = "composite -gravity center %v %v %v"
-const mogCmd = "mogrify -resize 640x480 %v"
-
-const CANVAS_PATH = "/tmp/black_canvas.png"
-const PLAY_ICON_PATH = "/tmp/playiconhover.png"
+//const canvasCmd = "composite -gravity center %v %v %v"
+//const iconCmd = "composite -gravity center %v %v %v"
+//const mogCmd = "mogrify -resize 640x480 %v"
+//
+//const CANVAS_PATH = "/tmp/black_canvas.png"
+//const PLAY_ICON_PATH = "/tmp/playiconhover.png"
 
 const thumbTime int = 1
 const thumbX int = 320
 const thumbY int = 240
 
-func execCommand(command string) {
-	log.Println("Executing:", command)
-	cmd := strings.Split(command, " ")
-	err := exec.Command(cmd[0], cmd[1:len(cmd)]...).Run()
+func printCommand(cmd *exec.Cmd) {
+	fmt.Printf("==> Executing: %s\n", strings.Join(cmd.Args, " "))
+}
+
+func printError(err error) {
 	if err != nil {
-		panic(errors.New("Error in executable : " + cmd[0] + " " + err.Error()))
+		os.Stderr.WriteString(fmt.Sprintf("==> Error: %s\n", err.Error()))
 	}
 }
 
-func patchPlayIcon(thumbPath string) string {
-	canvaser := fmt.Sprintf(canvasCmd, thumbPath, CANVAS_PATH, thumbPath)
-	iconer := fmt.Sprintf(iconCmd, thumbPath, PLAY_ICON_PATH, thumbPath)
-	mogrifier := fmt.Sprintf(mogCmd, thumbPath)
-
-	execCommand(canvaser)
-	execCommand(iconer)
-	execCommand(mogrifier)
-
-	return thumbPath
+func printOutput(outs []byte) {
+	if len(outs) > 0 {
+		fmt.Printf("==> Output: %s\n", string(outs))
+	}
 }
+
+func execCommand(cmd *exec.Cmd) {
+	printCommand(cmd)
+	output, err := cmd.CombinedOutput()
+	printError(err)
+	printOutput(output)
+
+	if err != nil {
+		panic(errors.New("Error in executable : " + err.Error()))
+	}
+}
+
+//func patchPlayIcon(thumbPath string) string {
+//	canvaser := fmt.Sprintf(canvasCmd, thumbPath, CANVAS_PATH, thumbPath)
+//	iconer := fmt.Sprintf(iconCmd, thumbPath, PLAY_ICON_PATH, thumbPath)
+//	mogrifier := fmt.Sprintf(mogCmd, thumbPath)
+//
+//	execCommand(canvaser)
+//	execCommand(iconer)
+//	execCommand(mogrifier)
+//
+//	return thumbPath
+//}
 
 func videoThumbnail(asset *db.Asset, duration, sizeX, sizeY int) string {
 	assetId := asset.Id.Hex()
-	bucket := asset.Bucket
-	path := asset.Path
 
 	hour := 0
 	minute := 0
@@ -83,12 +97,16 @@ func videoThumbnail(asset *db.Asset, duration, sizeX, sizeY int) string {
 		minute = minute % 60
 	}
 
-	signedUrl := getSignedURL(bucket, path)
+	signedUrl := getSignedURL(asset.Bucket, asset.Path)
 	thumbPath := fmt.Sprintf("/tmp/%v_thumb.png", assetId)
 
 	cleanupThumbnail(thumbPath)
 
-	videoThumber := fmt.Sprintf(thumbCmd, config.Settings.Moire.FFmpeg, signedUrl, hour, minute, second, sizeX, thumbPath)
+	input := fmt.Sprintf(`"%v"`, signedUrl)
+	time := fmt.Sprintf(`%02d:%02d:%02d`, hour, minute, second)
+	scale := fmt.Sprintf(`scale="%v:-1"`, sizeX)
+
+	videoThumber := exec.Command(config.Settings.Moire.FFmpeg, "-i", input, "-ss", time, "-vframes", "1", "-vf", scale, thumbPath)
 	execCommand(videoThumber)
 
 	return thumbPath
