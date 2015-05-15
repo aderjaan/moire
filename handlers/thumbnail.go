@@ -102,9 +102,9 @@ func videoThumbnail(asset *db.Asset, duration, sizeX, sizeY int) string {
 
 	cleanupThumbnail(thumbPath)
 
-	input := fmt.Sprintf(`"%v"`, signedUrl)
+	input := fmt.Sprintf(`%v`, signedUrl)
 	time := fmt.Sprintf(`%02d:%02d:%02d`, hour, minute, second)
-	scale := fmt.Sprintf(`scale="%v:-1"`, sizeX)
+	scale := fmt.Sprintf(`scale=%v:-1`, sizeX)
 
 	videoThumber := exec.Command(config.Settings.Moire.FFmpeg, "-i", input, "-ss", time, "-vframes", "1", "-vf", scale, thumbPath)
 	execCommand(videoThumber)
