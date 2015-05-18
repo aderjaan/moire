@@ -8,7 +8,6 @@ import (
 	"image/jpeg"
 	"image/png"
 	"io"
-	"log"
 	"math/big"
 	"net/http"
 	"path"
@@ -16,13 +15,11 @@ import (
 	"github.com/bulletind/moire/config"
 	"github.com/bulletind/moire/db"
 
-	"github.com/nfnt/resize"
 	"gopkg.in/simversity/gottp.v2"
 
 	"os"
 	"os/exec"
 	"strconv"
-	"strings"
 )
 
 type cmdStruct struct {
@@ -41,28 +38,8 @@ const thumbTime int = 1
 const thumbX int = 320
 const thumbY int = 240
 
-func printCommand(cmd *exec.Cmd) {
-	fmt.Printf("==> Executing: %s\n", strings.Join(cmd.Args, " "))
-}
-
-func printError(err error) {
-	if err != nil {
-		os.Stderr.WriteString(fmt.Sprintf("==> Error: %s\n", err.Error()))
-	}
-}
-
-func printOutput(outs []byte) {
-	if len(outs) > 0 {
-		fmt.Printf("==> Output: %s\n", string(outs))
-	}
-}
-
 func execCommand(cmd *exec.Cmd) {
-	printCommand(cmd)
-	output, err := cmd.CombinedOutput()
-	printError(err)
-	printOutput(output)
-
+	err := executeRaw(cmd)
 	if err != nil {
 		panic(errors.New("Error in executable : " + err.Error()))
 	}
@@ -102,22 +79,31 @@ func videoThumbnail(asset *db.Asset, duration, sizeX, sizeY int) string {
 
 	cleanupThumbnail(thumbPath)
 
-	input := fmt.Sprintf(`%v`, signedUrl)
+	//input := fmt.Sprintf(`%v`, signedUrl)
 	time := fmt.Sprintf(`%02d:%02d:%02d`, hour, minute, second)
 	scale := fmt.Sprintf(`scale=%v:-1`, sizeX)
 
-	videoThumber := exec.Command(config.Settings.Moire.FFmpeg, "-i", input, "-ss", time, "-vframes", "1", "-vf", scale, thumbPath)
+	videoThumber := exec.Command(
+		config.Settings.Moire.FFmpeg, "-i", signedUrl, "-ss",
+		time, "-vframes", "1", "-vf", scale, thumbPath,
+	)
+
 	execCommand(videoThumber)
 
 	return thumbPath
 }
 
 func getGCD(x, y int64) int64 {
+	// I have no idea, where this function is being used.
+
 	gcd := new(big.Int).GCD(nil, nil, big.NewInt(x), big.NewInt(y)).Int64()
 	return gcd
 }
 
 func getImage(rc io.Reader) (img image.Image, ft string, err error) {
+	// Tries to identify an Image as type JPEG, PNG or Gif.
+	// I have seen this failing so I don't know how long this is going to last.
+
 	img, ft, err = image.Decode(rc)
 	if err == nil {
 		return
@@ -143,39 +129,55 @@ func getImage(rc io.Reader) (img image.Image, ft string, err error) {
 	return
 }
 
-func imageThumbnail(asset *db.Asset, sizeX, sizeY int) string {
-	assetId := asset.Id.Hex()
-	bucket := asset.Bucket
-	path := asset.Path
+func optimizeThumbnail(thumbPath string) {
+	// Optimize the thumbnail to be of 70% quality.
+	// It really reduces the size of the resultant image.
 
+	optCmd := exec.Command("optipng", "-o7", "-q", thumbPath)
+	executeRaw(optCmd)
+}
+
+func imageThumbnail(asset *db.Asset, sizeX, sizeY int) string {
+
+	assetId := asset.Id.Hex()
+
+	signedUrl := getSignedURL(asset.Bucket, asset.Path)
 	thumbPath := fmt.Sprintf("/tmp/%v_thumb.png", assetId)
 	cleanupThumbnail(thumbPath)
 
-	rc, err := getS3Reader(bucket, path)
-	if err != nil {
-		log.Fatal(err)
-	}
+	scale := fmt.Sprintf(`scale='if(gt(a,4/3),%v,-1)':'if(gt(a,4/3),-1,%v)'`, sizeX, sizeY)
 
-	defer rc.Close()
+	imageThumber := exec.Command(
+		config.Settings.Moire.FFmpeg, "-i", signedUrl, "-vf", scale, thumbPath,
+	)
 
-	img, _, err := getImage(rc)
-	if err != nil {
-		log.Fatal(err)
-	}
+	execCommand(imageThumber)
 
-	m := resize.Thumbnail(uint(sizeX), uint(sizeY), img, resize.Lanczos3)
+	//rc, err := getS3Reader(bucket, path)
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
 
-	out, err := os.Create(thumbPath)
-	if err != nil {
-		log.Fatal(err)
-	}
+	//defer rc.Close()
 
-	defer out.Close()
+	//img, _, err := getImage(rc)
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
 
-	// write new image to file
-	if err := png.Encode(out, m); err != nil {
-		log.Fatal(err)
-	}
+	//m := resize.Thumbnail(uint(sizeX), uint(sizeY), img, resize.Lanczos3)
+
+	//out, err := os.Create(thumbPath)
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+
+	//defer out.Close()
+
+	//// write new image to file
+	//if err := png.Encode(out, m); err != nil {
+	//	log.Fatal(err)
+	//}
 
 	return thumbPath
 }
@@ -213,9 +215,12 @@ func (self *Thumbnail) Get(request *gottp.Request) {
 
 	signedUrl, err := getThumbnailURL(asset)
 	if err != nil {
+		// If err is nil, implies that thumbnail was successfully located.
 		request.Redirect(signedUrl, TemporaryRedirect)
 		return
-	} else if signedUrl != "" {
+	}
+
+	if signedUrl != "" {
 		thumbUrl = signedUrl
 	}
 
@@ -256,6 +261,9 @@ func (self *Thumbnail) Get(request *gottp.Request) {
 
 				return
 			}
+
+			// Optimize the just genereated thumbnail for Internet.
+			optimizeThumbnail(thumbPath)
 
 			thumbUrl = path.Join("/", "thumbnail", assetId, cacheKey)
 			uploadFile(asset.Bucket, thumbUrl, thumbPath)
