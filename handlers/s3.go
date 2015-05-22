@@ -17,8 +17,6 @@ import (
 	"github.com/bulletind/moire/db"
 )
 
-const UploadPrefix = "original_file"
-
 func getRegion() aws.Region {
 	return aws.Regions[config.Settings.S3.Region]
 }
@@ -94,19 +92,28 @@ func getUploadURL(assetId string) string {
 }
 
 func getThumbnailURL(asset *db.Asset) (url string, err error) {
+	if asset.FileType != VideoFile && asset.FileType != ImageFile {
+		err = errors.New(thumbNotAllowed)
+		url = attachmentUrl
+		return
+	}
+
 	switch asset.Status {
 	case db.READY:
 		if asset.ThumbnailPath == "" {
-			err = errors.New("Ouch! This thumbnail is no longer available.")
+			url = missingUrl
+			err = errors.New(thumbUnavailable)
 		} else {
 			url = asset.ThumbnailPath
 		}
 		break
 	case db.LOST:
-		err = errors.New("Ouch! This thumbnail is no longer available.")
+		url = missingUrl
+		err = errors.New(thumbUnavailable)
 		break
 	default:
-		err = errors.New("Hmm! Thumbnail was not found as the content is still being uploaded.")
+		url = pendingUrl
+		err = errors.New(uploadInProgress)
 		break
 	}
 
@@ -119,10 +126,14 @@ func getURL(asset *db.Asset) (url string, err error) {
 		url = getSignedURL(asset.Bucket, asset.Path)
 		break
 	case db.LOST:
-		err = errors.New("Ouch! This content is no longer available.")
+		err = errors.New(contentUnavailable)
 		break
 	default:
-		err = errors.New("This content is still being uploaded. We appreciate your impatience")
+		if asset.FileType == ImageFile {
+			url = pendingUrl
+		} else {
+			err = errors.New(uploadInProgress)
+		}
 		break
 	}
 

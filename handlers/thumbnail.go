@@ -8,19 +8,18 @@ import (
 	"image/jpeg"
 	"image/png"
 	"io"
-	"log"
 	"math/big"
 	"net/http"
 	"path"
 
+	"github.com/bulletind/moire/config"
 	"github.com/bulletind/moire/db"
-	"github.com/nfnt/resize"
+
 	"gopkg.in/simversity/gottp.v2"
 
 	"os"
 	"os/exec"
 	"strconv"
-	"strings"
 )
 
 type cmdStruct struct {
@@ -28,41 +27,39 @@ type cmdStruct struct {
 	Args    []string
 }
 
-const thumbCmd = "ffmpeg -i \"%v\" -ss %02d:%02d:%d -vframes 1 -vf scale=\"%v:-1\" %v"
-
-const canvasCmd = "composite -gravity center %v %v %v"
-const iconCmd = "composite -gravity center %v %v %v"
-const mogCmd = "mogrify -resize 640x480 %v"
-
-const CANVAS_PATH = "/tmp/black_canvas.png"
-const PLAY_ICON_PATH = "/tmp/playiconhover.png"
+//const canvasCmd = "composite -gravity center %v %v %v"
+//const iconCmd = "composite -gravity center %v %v %v"
+//const mogCmd = "mogrify -resize 640x480 %v"
+//
+//const CANVAS_PATH = "/tmp/black_canvas.png"
+//const PLAY_ICON_PATH = "/tmp/playiconhover.png"
 
 const thumbTime int = 1
 const thumbX int = 320
 const thumbY int = 240
 
-func execCommand(command string) {
-	log.Println("Executing:", command)
-	cmd := strings.Split(command, " ")
-	err := exec.Command(cmd[0], cmd[1:len(cmd)]...).Run()
+func execCommand(cmd *exec.Cmd) {
+	err := executeRaw(cmd)
 	if err != nil {
-		panic(errors.New("Error in executable : " + cmd[0] + " " + err.Error()))
+		panic(errors.New("Error in executable : " + err.Error()))
 	}
 }
 
-func patchPlayIcon(thumbPath string) string {
-	canvaser := fmt.Sprintf(canvasCmd, thumbPath, CANVAS_PATH, thumbPath)
-	iconer := fmt.Sprintf(iconCmd, thumbPath, PLAY_ICON_PATH, thumbPath)
-	mogrifier := fmt.Sprintf(mogCmd, thumbPath)
+//func patchPlayIcon(thumbPath string) string {
+//	canvaser := fmt.Sprintf(canvasCmd, thumbPath, CANVAS_PATH, thumbPath)
+//	iconer := fmt.Sprintf(iconCmd, thumbPath, PLAY_ICON_PATH, thumbPath)
+//	mogrifier := fmt.Sprintf(mogCmd, thumbPath)
+//
+//	execCommand(canvaser)
+//	execCommand(iconer)
+//	execCommand(mogrifier)
+//
+//	return thumbPath
+//}
 
-	execCommand(canvaser)
-	execCommand(iconer)
-	execCommand(mogrifier)
+func videoThumbnail(asset *db.Asset, duration, sizeX, sizeY int) string {
+	assetId := asset.Id.Hex()
 
-	return thumbPath
-}
-
-func videoThumbnail(assetId, bucket, url string, duration, sizeX, sizeY int) string {
 	hour := 0
 	minute := 0
 	second := duration
@@ -77,23 +74,36 @@ func videoThumbnail(assetId, bucket, url string, duration, sizeX, sizeY int) str
 		minute = minute % 60
 	}
 
-	signedUrl := getSignedURL(bucket, url)
+	signedUrl := getSignedURL(asset.Bucket, asset.Path)
 	thumbPath := fmt.Sprintf("/tmp/%v_thumb.png", assetId)
 
 	cleanupThumbnail(thumbPath)
 
-	videoThumber := fmt.Sprintf(thumbCmd, signedUrl, hour, minute, second, sizeX, thumbPath)
+	//input := fmt.Sprintf(`%v`, signedUrl)
+	time := fmt.Sprintf(`%02d:%02d:%02d`, hour, minute, second)
+	scale := fmt.Sprintf(`scale=%v:-1`, sizeX)
+
+	videoThumber := exec.Command(
+		config.Settings.Moire.FFmpeg, "-i", signedUrl, "-ss",
+		time, "-vframes", "1", "-vf", scale, thumbPath,
+	)
+
 	execCommand(videoThumber)
 
 	return thumbPath
 }
 
 func getGCD(x, y int64) int64 {
+	// I have no idea, where this function is being used.
+
 	gcd := new(big.Int).GCD(nil, nil, big.NewInt(x), big.NewInt(y)).Int64()
 	return gcd
 }
 
 func getImage(rc io.Reader) (img image.Image, ft string, err error) {
+	// Tries to identify an Image as type JPEG, PNG or Gif.
+	// I have seen this failing so I don't know how long this is going to last.
+
 	img, ft, err = image.Decode(rc)
 	if err == nil {
 		return
@@ -119,35 +129,55 @@ func getImage(rc io.Reader) (img image.Image, ft string, err error) {
 	return
 }
 
-func imageThumbnail(assetId, bucket, url string, sizeX, sizeY int) string {
+func optimizeThumbnail(thumbPath string) {
+	// Optimize the thumbnail to be of 70% quality.
+	// It really reduces the size of the resultant image.
+
+	optCmd := exec.Command("optipng", "-o7", "-q", thumbPath)
+	executeRaw(optCmd)
+}
+
+func imageThumbnail(asset *db.Asset, sizeX, sizeY int) string {
+
+	assetId := asset.Id.Hex()
+
+	signedUrl := getSignedURL(asset.Bucket, asset.Path)
 	thumbPath := fmt.Sprintf("/tmp/%v_thumb.png", assetId)
 	cleanupThumbnail(thumbPath)
 
-	rc, err := getS3Reader(bucket, url)
-	if err != nil {
-		log.Fatal(err)
-	}
+	scale := fmt.Sprintf(`scale='if(gt(a,4/3),%v,-1)':'if(gt(a,4/3),-1,%v)'`, sizeX, sizeY)
 
-	defer rc.Close()
+	imageThumber := exec.Command(
+		config.Settings.Moire.FFmpeg, "-i", signedUrl, "-vf", scale, thumbPath,
+	)
 
-	img, _, err := getImage(rc)
-	if err != nil {
-		log.Fatal(err)
-	}
+	execCommand(imageThumber)
 
-	m := resize.Thumbnail(uint(sizeX), uint(sizeY), img, resize.Lanczos3)
+	//rc, err := getS3Reader(bucket, path)
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
 
-	out, err := os.Create(thumbPath)
-	if err != nil {
-		log.Fatal(err)
-	}
+	//defer rc.Close()
 
-	defer out.Close()
+	//img, _, err := getImage(rc)
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
 
-	// write new image to file
-	if err := png.Encode(out, m); err != nil {
-		log.Fatal(err)
-	}
+	//m := resize.Thumbnail(uint(sizeX), uint(sizeY), img, resize.Lanczos3)
+
+	//out, err := os.Create(thumbPath)
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+
+	//defer out.Close()
+
+	//// write new image to file
+	//if err := png.Encode(out, m); err != nil {
+	//	log.Fatal(err)
+	//}
 
 	return thumbPath
 }
@@ -178,24 +208,20 @@ func (self *Thumbnail) Get(request *gottp.Request) {
 	conn := getConn()
 	asset := getAsset(conn, _id)
 
-	if asset.FileType != VideoFile && asset.FileType != ImageFile {
-		request.Raise(gottp.HttpError{
-			http.StatusNotFound,
-			"Can only generate thumbnails for Image and Video files.",
-		})
-
-		return
-	}
-
 	args := thumbArgs{}
 	request.ConvertArguments(&args)
 
-	var err error
 	var thumbUrl string
 
-	if thumbUrl, err = getThumbnailURL(asset); err != nil {
-		getPlaceHolder(request.Writer, err.Error())
+	signedUrl, err := getThumbnailURL(asset)
+	if err != nil {
+		// If err is nil, implies that thumbnail was successfully located.
+		request.Redirect(signedUrl, TemporaryRedirect)
 		return
+	}
+
+	if signedUrl != "" {
+		thumbUrl = signedUrl
 	}
 
 	if args.Time+args.X+args.Y != "" {
@@ -222,10 +248,10 @@ func (self *Thumbnail) Get(request *gottp.Request) {
 			var thumbPath string
 
 			if asset.FileType == VideoFile {
-				thumbPath = videoThumbnail(assetId, asset.Bucket, asset.Path, time, x, y)
+				thumbPath = videoThumbnail(asset, time, x, y)
 
 			} else if asset.FileType == ImageFile {
-				thumbPath = imageThumbnail(assetId, asset.Bucket, asset.Path, x, y)
+				thumbPath = imageThumbnail(asset, x, y)
 
 			} else {
 				request.Raise(gottp.HttpError{
@@ -235,6 +261,9 @@ func (self *Thumbnail) Get(request *gottp.Request) {
 
 				return
 			}
+
+			// Optimize the just genereated thumbnail for Internet.
+			optimizeThumbnail(thumbPath)
 
 			thumbUrl = path.Join("/", "thumbnail", assetId, cacheKey)
 			uploadFile(asset.Bucket, thumbUrl, thumbPath)

@@ -1,4 +1,5 @@
 language: go
+
 go:
 - tip
 
@@ -16,7 +17,15 @@ before_script:
   - curl -sL https://raw.githubusercontent.com/travis-ci/artifacts/master/install | bash
 
 script:
+  - go test -v ./...
   - go build -v ./...
 
 after_success:
   - artifacts upload $HOME/gopath/bin/moire
+
+notifications:
+  email:
+    - piyush@piyushverma.net
+    - desaiparth08@gmail.com
+
+  slack: safetychanger:iBdUKrm6abL7BQNtoIpihFA3

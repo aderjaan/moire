@@ -15,26 +15,25 @@ type SNS struct {
 	gottp.BaseHandler
 }
 
+func parseMessage(n snsNotice) (msg snsMessage, errs *[]error) {
+	errs = utils.Validate(&n)
+	if len(*errs) > 0 {
+		return
+	}
+
+	utils.Decoder([]byte(n.Message), &msg)
+
+	errs = utils.Validate(&msg)
+	return
+}
+
 func (self *SNS) Post(request *gottp.Request) {
 	var errs *[]error
 
 	n := snsNotice{}
 	request.ConvertArguments(&n)
 
-	errs = utils.Validate(&n)
-	if len(*errs) > 0 {
-		request.Raise(gottp.HttpError{
-			http.StatusBadRequest,
-			ConcatenateErrors(errs),
-		})
-
-		return
-	}
-
-	msg := snsMessage{}
-	utils.Decoder([]byte(n.Message), &msg)
-
-	errs = utils.Validate(&msg)
+	msg, errs := parseMessage(n)
 	if len(*errs) > 0 {
 		request.Raise(gottp.HttpError{
 			http.StatusBadRequest,
@@ -75,18 +74,26 @@ func (self *SNS) Post(request *gottp.Request) {
 
 	assetId := asset.Id.Hex()
 
+	thumbnailPath := path.Join("/", "thumbnail", assetId)
+
 	if asset.FileType == VideoFile {
-		uploadUrl := path.Join("/", "thumbnail", assetId)
-		thumbPath := videoThumbnail(assetId, asset.Bucket, asset.Path, thumbTime, thumbX*2, thumbY*2)
-		uploadFile(asset.Bucket, uploadUrl, thumbPath)
-		updateAsset(conn, assetId, db.M{"$set": db.M{"thumbnail_path": uploadUrl}})
+
+		thumbPath := videoThumbnail(asset, thumbTime, thumbX*2, thumbY*2)
+		optimizeThumbnail(thumbPath)
+
+		uploadFile(asset.Bucket, thumbnailPath, thumbPath)
+		updateAsset(conn, assetId, db.M{"$set": db.M{"thumbnail_path": thumbnailPath}})
+
 		cleanupThumbnail(thumbPath)
 
 	} else if asset.FileType == ImageFile {
-		uploadUrl := path.Join("/", "thumbnail", assetId)
-		thumbPath := imageThumbnail(assetId, asset.Bucket, asset.Path, thumbX, thumbY)
-		uploadFile(asset.Bucket, uploadUrl, thumbPath)
-		updateAsset(conn, assetId, db.M{"$set": db.M{"thumbnail_path": uploadUrl}})
+
+		thumbPath := imageThumbnail(asset, thumbX, thumbY)
+		optimizeThumbnail(thumbPath)
+
+		uploadFile(asset.Bucket, thumbnailPath, thumbPath)
+		updateAsset(conn, assetId, db.M{"$set": db.M{"thumbnail_path": thumbnailPath}})
+
 		cleanupThumbnail(thumbPath)
 	}
 
