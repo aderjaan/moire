@@ -1,5 +1,9 @@
 Creating the Signature
 ----------------------
+0) Every URL must supply:
+  * public_key
+  * timestamp with timezone (strictly RFC33339 format)
+  * signature (computed below)
 
 1) Create the canonicalized query string that you need later in this procedure:
   * Sort the query string components by parameter name with natural byte ordering.
