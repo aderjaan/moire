@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/bulletind/moire/handlers"
-	"gopkg.in/simversity/gottp.v2"
+	"gopkg.in/simversity/gottp.v3"
 )
 
 func registerHandlers() {
