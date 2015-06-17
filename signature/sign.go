@@ -24,7 +24,7 @@ func isTimestampValid(signed_on string) error {
 	current_time := time.Now()
 
 	max_time_skew := current_time.Add(5 * time.Minute)
-	max_time_offset := current_time.Add(-5 * time.Minute)
+	max_time_offset := current_time.Add(-60 * time.Minute)
 
 	log.Println("Current:", current_time)
 	log.Println("Timestamp:", timestamp)
