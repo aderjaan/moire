@@ -11,10 +11,10 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/AdRoll/goamz/aws"
-	"github.com/AdRoll/goamz/s3"
 	"github.com/bulletind/moire/config"
 	"github.com/bulletind/moire/db"
+	"gopkg.in/bulletind/goamz.v1/aws"
+	"gopkg.in/bulletind/goamz.v1/s3"
 )
 
 func getRegion() aws.Region {
