@@ -1,7 +1,7 @@
 package config
 
 import (
-	"gopkg.in/simversity/gottp.v2/conf"
+	"gopkg.in/simversity/gottp.v3/conf"
 )
 
 type config struct {
@@ -20,6 +20,7 @@ type config struct {
 		DBUsername           string
 		DBPassword           string
 		FFmpeg               string
+		SignRequests         bool
 	}
 }
 
@@ -28,6 +29,7 @@ func (self *config) MakeConfig(configPath string) {
 	self.Moire.DBAddress = "127.0.0.1:27017"
 	self.Moire.DBName = "gallery"
 	self.Moire.FFmpeg = "ffmpeg"
+	self.Moire.SignRequests = false
 
 	self.S3.Region = "eu-west-1"
 	self.S3.Bucket = "moire-gallery"

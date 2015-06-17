@@ -15,7 +15,7 @@ import (
 	"github.com/bulletind/moire/config"
 	"github.com/bulletind/moire/db"
 
-	"gopkg.in/simversity/gottp.v2"
+	"gopkg.in/simversity/gottp.v3"
 
 	"os"
 	"os/exec"
