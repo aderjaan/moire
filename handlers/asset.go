@@ -37,7 +37,7 @@ func (self *Asset) Get(request *gottp.Request) {
 		})
 
 		return
-	} else if url != pendingUrl || config.Settings.Moire.SignRequests != true {
+	} else if config.Settings.Moire.SignRequests != true {
 		request.Redirect(url, TemporaryRedirectCode)
 		return
 	}
