@@ -86,15 +86,19 @@ func makeSignature(public_key, secret_key string, uri *url.URL) string {
 
 	//Construct Canonical Query
 	query := canonicalQuery(uri)
+	log.Println("CanonicalQuery:", query)
 
 	//Construct Path
 	path := canonicalPath(uri)
+	log.Println("CanonicalPath:", path)
 
 	//Sign the strings, by joining \n
 	signed_string := stringToSign(path, query)
+	log.Println("SignedString:", signed_string)
 
 	//Create Sha512 HMAC string
 	hmac_string := makeHmac512(signed_string, secret_key)
+	log.Println("Hmac string:", hmac_string)
 
 	//Encode the resultant to base64
 	base64_string := makeBase64(hmac_string)
@@ -116,6 +120,7 @@ func IsRequestValid(
 	values.Del("signature")
 	url_struct.RawQuery = values.Encode()
 
+	log.Println("Computing signature. PublicKey:", public_key, "PrivateKey:", private_key)
 	computed_signature := makeSignature(public_key, private_key, url_struct)
 	log.Println("Computed: => ", computed_signature)
 
