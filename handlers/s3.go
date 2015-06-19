@@ -120,7 +120,7 @@ func getThumbnailURL(asset *db.Asset) (url string, err error) {
 	return
 }
 
-func getURL(asset *db.Asset) (url string, err error) {
+func getURL(asset *db.Asset, no_redirect bool) (url string, err error) {
 	switch asset.Status {
 	case db.READY:
 		url = getSignedURL(asset.Bucket, asset.Path)
@@ -129,7 +129,7 @@ func getURL(asset *db.Asset) (url string, err error) {
 		err = errors.New(contentUnavailable)
 		break
 	default:
-		if asset.FileType == ImageFile {
+		if asset.FileType == ImageFile && no_redirect != true {
 			url = pendingUrl
 		} else {
 			err = errors.New(uploadInProgress)

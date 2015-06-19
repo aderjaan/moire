@@ -28,7 +28,9 @@ func (self *Asset) Get(request *gottp.Request) {
 	conn := getConn()
 	asset := getAsset(conn, _id)
 
-	url, err := getURL(asset)
+	_, no_redirect := request.GetArgument("no_redirect").(string)
+
+	url, err := getURL(asset, no_redirect)
 
 	if err != nil {
 		request.Raise(gottp.HttpError{
