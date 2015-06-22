@@ -213,12 +213,25 @@ func (self *Thumbnail) Get(request *gottp.Request) {
 
 	var thumbUrl string
 
+	_, no_redirect := request.GetArgument("no_redirect").(string)
+
 	signedUrl, err := getThumbnailURL(asset)
 	if err != nil {
+		if no_redirect == true {
+			request.Raise(gottp.HttpError{
+				http.StatusNotFound,
+				err.Error(),
+			})
+
+			return
+		}
+
 		// If err is nil, implies that thumbnail was successfully located.
 		request.Redirect(signedUrl, TemporaryRedirect)
 		return
 	}
+
+	ValidateSignature(request)
 
 	if signedUrl != "" {
 		thumbUrl = signedUrl
