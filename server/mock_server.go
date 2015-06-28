@@ -45,6 +45,7 @@ func MockDBServer() (server *tests.MockServer) {
 		cached.dbInit = true
 		gottp.MakeConfig(&config.Settings)
 		config.Settings.Moire.DBName = "gallery-testing"
+		config.Settings.Moire.SignRequests = true
 		config.Settings.Gottp.EmailDummy = true
 		Setup()
 	}

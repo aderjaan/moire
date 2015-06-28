@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"fmt"
 	"log"
 	"strings"
 	"testing"
@@ -10,7 +11,7 @@ import (
 	"gopkg.in/simversity/gottp.v3/utils"
 )
 
-var assetId = ""
+var assetRet = map[string]string{}
 
 func TestCreateAsset(t *testing.T) {
 	server := server.MockDBServer()
@@ -27,7 +28,6 @@ func TestCreateAsset(t *testing.T) {
 	log.Println("Creating asset:", req.Data)
 
 	server.Test(&req, func(msg *tests.MockResponse) {
-		assetRet := map[string]string{}
 		utils.Convert(&msg.Data, &assetRet)
 
 		if msg.Status != 200 {
@@ -37,8 +37,6 @@ func TestCreateAsset(t *testing.T) {
 		for _, key := range []string{"upload_url", "url", "_id"} {
 			if val, ok := assetRet[key]; !ok || len(val) == 0 {
 				t.Error(key + " should be a valid string in creation return.")
-			} else if key == "_id" {
-				assetId = val
 			}
 		}
 	})
@@ -49,7 +47,7 @@ func TestGetAsset(t *testing.T) {
 	defer server.Close()
 
 	req := tests.MockRequest{}
-	req.Url = "/assets/" + assetId + "/?no_redirect=true"
+	req.Url = "/assets/" + assetRet["_id"] + "/?no_redirect=true"
 	req.Method = "get"
 
 	server.Test(&req, func(msg *tests.MockResponse) {
@@ -59,6 +57,27 @@ func TestGetAsset(t *testing.T) {
 
 		if !strings.Contains(msg.Message, "content is still being uploaded") {
 			t.Error("Message should be in pending state.")
+		}
+	})
+}
+
+func TestGetAssetThumbnail(t *testing.T) {
+	server := server.MockDBServer()
+	defer server.Close()
+
+	req := tests.MockRequest{}
+	req.Url = "/assets/" + assetRet["_id"] + "/thumbnail/?no_redirect=true"
+	req.Method = "get"
+
+	server.Test(&req, func(msg *tests.MockResponse) {
+		exception := "Message should be in pending state."
+
+		if msg.Status != 404 {
+			t.Error(exception)
+		}
+
+		if !strings.Contains(msg.Message, "content is still being uploaded") {
+			t.Error(exception)
 		}
 	})
 }
@@ -78,7 +97,6 @@ func TestCreatePDF(t *testing.T) {
 	log.Println("Creating asset:", req.Data)
 
 	server.Test(&req, func(msg *tests.MockResponse) {
-		assetRet := map[string]string{}
 		utils.Convert(&msg.Data, &assetRet)
 
 		if msg.Status != 200 {
@@ -88,9 +106,41 @@ func TestCreatePDF(t *testing.T) {
 		for _, key := range []string{"upload_url", "url", "_id"} {
 			if val, ok := assetRet[key]; !ok || len(val) == 0 {
 				t.Error(key + " should be a valid string in creation return.")
-			} else if key == "_id" {
-				assetId = val
 			}
+		}
+	})
+}
+
+func TestSNSMessageIgnoredPath(t *testing.T) {
+	server := server.MockDBServer()
+	defer server.Close()
+
+	snsString := fmt.Sprintf(`{
+		"Type" : "Notification",
+		"MessageId" : "12",
+		"TopicArn" : "arn",
+		"Subject" : "Amazon S3 Notification",
+		"Message" : "{\"Records\":[{\"s3\":{\"bucket\":{\"name\":\"sc-gallery\"},\"object\":{\"key\":\"%v\",\"size\":71501}}}]}",
+		"Timestamp" : "2015-04-14T03:48:23.584Z",
+		"SignatureVersion" : "1",
+		"Signature" : "liP1M"
+	}`, "/hello/world/")
+
+	req := tests.MockRequest{}
+	req.Url = "/notify/sns/"
+	req.Method = "post"
+	req.Data = map[string]interface{}{}
+	utils.Decoder([]byte(snsString), &req.Data)
+
+	server.Test(&req, func(msg *tests.MockResponse) {
+		exception := "This path should have been ignroed."
+
+		if msg.Status != 400 {
+			t.Error(exception)
+		}
+
+		if !strings.Contains(msg.Message, "not meant to be monitored") {
+			t.Error(exception)
 		}
 	})
 }
