@@ -38,7 +38,11 @@ func (self *Asset) Get(request *gottp.Request) {
 		return
 	}
 
-	ValidateSignature(request)
+	valid := ValidateSignature(request)
+	if valid == false {
+		return
+	}
+
 	request.Redirect(url, TemporaryRedirectCode)
 	return
 }

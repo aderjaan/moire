@@ -231,7 +231,10 @@ func (self *Thumbnail) Get(request *gottp.Request) {
 		return
 	}
 
-	ValidateSignature(request)
+	valid := ValidateSignature(request)
+	if valid == false {
+		return
+	}
 
 	if signedUrl != "" {
 		thumbUrl = signedUrl

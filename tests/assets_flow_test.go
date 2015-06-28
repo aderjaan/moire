@@ -5,9 +5,12 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/bulletind/moire/config"
 	"github.com/bulletind/moire/server"
+	"github.com/bulletind/moire/signature"
+
 	"gopkg.in/simversity/gottp.v3/tests"
 	"gopkg.in/simversity/gottp.v3/utils"
 )
@@ -216,8 +219,6 @@ func TestSNSMessage(t *testing.T) {
 	utils.Decoder([]byte(snsString), &req.Data)
 
 	server.Test(&req, func(msg *tests.MockResponse) {
-		fmt.Println(msg)
-
 		exception := "This asset should be marked as ready."
 		if msg.Status != 200 {
 			t.Error(exception)
@@ -229,15 +230,56 @@ func TestSNSMessage(t *testing.T) {
 	})
 }
 
-func TestGetAssetAfterSNS(t *testing.T) {
+func TestGetAssetNeedSignature(t *testing.T) {
 	server := server.MockDBServer()
 	defer server.Close()
 
 	req := tests.MockRequest{}
+	config.Settings.Moire.SignRequests = true
 	req.Url = "/assets/" + assetRet["_id"] + "/?no_redirect=true"
 	req.Method = "get"
 
 	server.Test(&req, func(msg *tests.MockResponse) {
-		fmt.Println(msg)
+		exception := "This asset should be marked as ready."
+		if msg.Status != 412 {
+			t.Error(exception)
+		}
+
+		if !strings.Contains(msg.Message, "required parameter") {
+			t.Error(exception)
+		}
+	})
+}
+
+func TestGetAssetWithSignature(t *testing.T) {
+	server := server.MockDBServer()
+	defer server.Close()
+
+	req := tests.MockRequest{}
+	config.Settings.Moire.SignRequests = true
+
+	path := "/assets/" + assetRet["_id"]
+	public_key := "HelloWorldTest"
+	private_key := signature.GetSecretKey(public_key)
+	timestamp := time.Now().Format(time.RFC3339)
+
+	sign := signature.MakeSignature(public_key, private_key, path)
+
+	values := url.Values{
+		"no_redirect": {"true"},
+		"signature":   {sign},
+		"timestamp":   {timestamp},
+		"public_key":  {public_key},
+	}
+
+	sorted := values.Encode()
+	escaped := strings.Replace(sorted, "+", "%20", -1)
+
+	req.Url = path + "?" + escaped
+	req.Method = "get"
+
+	server.Test(&req, func(msg *tests.MockResponse) {
+		fmt.Println("***********")
+		fmt.Println(msg.Error)
 	})
 }
