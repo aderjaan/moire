@@ -8,13 +8,6 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-const (
-	AudioFile = "audio"
-	ImageFile = "image"
-	VideoFile = "video"
-	PlainFile = "plain"
-)
-
 func getConn() *db.MConn {
 	return db.GetConn(
 		config.Settings.Moire.DBName,

@@ -211,6 +211,11 @@ func (self *Thumbnail) Get(request *gottp.Request) {
 	args := thumbArgs{}
 	request.ConvertArguments(&args)
 
+	valid := ValidateSignature(request)
+	if valid == false {
+		return
+	}
+
 	var thumbUrl string
 
 	_, no_redirect := request.GetArgument("no_redirect").(string)
@@ -228,11 +233,6 @@ func (self *Thumbnail) Get(request *gottp.Request) {
 
 		// If err is nil, implies that thumbnail was successfully located.
 		request.Redirect(signedUrl, TemporaryRedirect)
-		return
-	}
-
-	valid := ValidateSignature(request)
-	if valid == false {
 		return
 	}
 

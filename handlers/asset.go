@@ -26,20 +26,24 @@ func (self *Asset) Get(request *gottp.Request) {
 	conn := getConn()
 	asset := getAsset(conn, _id)
 
+	valid := ValidateSignature(request)
+	if valid == false {
+		return
+	}
+
 	_, no_redirect := request.GetArgument("no_redirect").(string)
 
-	url, err := getURL(asset, no_redirect)
-	if err != nil {
+	url, err := getURL(asset)
+
+	if asset.FileType == ImageFile && no_redirect != true {
+		// If its an Image and no_redirect is not provided, error is ir-relevant.
+		// It will always return the default image anyway.
+	} else if err != nil {
 		request.Raise(gottp.HttpError{
 			http.StatusNotFound,
 			err.Error(),
 		})
 
-		return
-	}
-
-	valid := ValidateSignature(request)
-	if valid == false {
 		return
 	}
 

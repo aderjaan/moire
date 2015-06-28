@@ -19,6 +19,24 @@ import (
 
 var assetRet = map[string]string{}
 
+func makeSignatureURL(path string) string {
+	public_key := "HelloWorldTest"
+	private_key := signature.GetSecretKey(public_key)
+	timestamp := time.Now().Format(time.RFC3339)
+
+	sign := signature.MakeSignature(public_key, private_key, path)
+
+	values := url.Values{
+		"signature":  {sign},
+		"timestamp":  {timestamp},
+		"public_key": {public_key},
+	}
+
+	sorted := values.Encode()
+	escaped := strings.Replace(sorted, "+", "%20", -1)
+	return path + "?" + escaped
+}
+
 func TestCreatePDF(t *testing.T) {
 	server := server.MockDBServer()
 	defer server.Close()
@@ -48,12 +66,35 @@ func TestCreatePDF(t *testing.T) {
 	})
 }
 
+func TestGetPDFNeedSignature(t *testing.T) {
+	server := server.MockDBServer()
+	defer server.Close()
+
+	req := tests.MockRequest{}
+
+	req.Url = "/assets/" + assetRet["_id"]
+	req.Method = "get"
+
+	server.Test(&req, func(msg *tests.MockResponse) {
+		exception := "This asset needs signature."
+		if msg.Status != 412 {
+			fmt.Printf("%# v", pretty.Formatter(msg))
+			t.Error(exception)
+		}
+
+		if !strings.Contains(msg.Message, "required parameter") {
+			fmt.Printf("%# v", pretty.Formatter(msg))
+			t.Error(exception)
+		}
+	})
+}
+
 func TestGetPDF(t *testing.T) {
 	server := server.MockDBServer()
 	defer server.Close()
 
 	req := tests.MockRequest{}
-	req.Url = "/assets/" + assetRet["_id"]
+	req.Url = makeSignatureURL("/assets/" + assetRet["_id"])
 	req.Method = "get"
 
 	server.Test(&req, func(msg *tests.MockResponse) {
@@ -69,12 +110,34 @@ func TestGetPDF(t *testing.T) {
 	})
 }
 
-func TestPDFThumbnailNoRedirect(t *testing.T) {
+func TestPDFThumbnailNeedsSignature(t *testing.T) {
 	server := server.MockDBServer()
 	defer server.Close()
 
 	req := tests.MockRequest{}
 	req.Url = "/assets/" + assetRet["_id"] + "/thumbnail/?no_redirect=true"
+	req.Method = "get"
+
+	server.Test(&req, func(msg *tests.MockResponse) {
+		exception := "This asset needs signature."
+		if msg.Status != 412 {
+			fmt.Printf("%# v", pretty.Formatter(msg))
+			t.Error(exception)
+		}
+
+		if !strings.Contains(msg.Message, "required parameter") {
+			fmt.Printf("%# v", pretty.Formatter(msg))
+			t.Error(exception)
+		}
+	})
+}
+
+func TestPDFThumbnailNoRedirect(t *testing.T) {
+	server := server.MockDBServer()
+	defer server.Close()
+
+	req := tests.MockRequest{}
+	req.Url = makeSignatureURL("/assets/"+assetRet["_id"]+"/thumbnail") + "&no_redirect=true"
 	req.Method = "get"
 
 	server.Test(&req, func(msg *tests.MockResponse) {
@@ -97,7 +160,7 @@ func TestPDFThumbnailGetDefault(t *testing.T) {
 	defer server.Close()
 
 	req := tests.MockRequest{}
-	req.Url = "/assets/" + assetRet["_id"] + "/thumbnail/"
+	req.Url = makeSignatureURL("/assets/" + assetRet["_id"] + "/thumbnail")
 	req.Method = "get"
 
 	server.Test(&req, func(msg *tests.MockResponse) {
@@ -240,53 +303,13 @@ func TestSNSMessage(t *testing.T) {
 	})
 }
 
-func TestGetPDFNeedSignature(t *testing.T) {
-	server := server.MockDBServer()
-	defer server.Close()
-
-	req := tests.MockRequest{}
-	config.Settings.Moire.SignRequests = true
-	req.Url = "/assets/" + assetRet["_id"]
-	req.Method = "get"
-
-	server.Test(&req, func(msg *tests.MockResponse) {
-		exception := "This asset should be marked as ready."
-		if msg.Status != 412 {
-			fmt.Printf("%# v", pretty.Formatter(msg))
-			t.Error(exception)
-		}
-
-		if !strings.Contains(msg.Message, "required parameter") {
-			fmt.Printf("%# v", pretty.Formatter(msg))
-			t.Error(exception)
-		}
-	})
-}
-
 func TestGetPDFWithSignature(t *testing.T) {
 	server := server.MockDBServer()
 	defer server.Close()
 
 	req := tests.MockRequest{}
-	config.Settings.Moire.SignRequests = true
 
-	path := "/assets/" + assetRet["_id"]
-	public_key := "HelloWorldTest"
-	private_key := signature.GetSecretKey(public_key)
-	timestamp := time.Now().Format(time.RFC3339)
-
-	sign := signature.MakeSignature(public_key, private_key, path)
-
-	values := url.Values{
-		"signature":  {sign},
-		"timestamp":  {timestamp},
-		"public_key": {public_key},
-	}
-
-	sorted := values.Encode()
-	escaped := strings.Replace(sorted, "+", "%20", -1)
-
-	req.Url = path + "?" + escaped
+	req.Url = makeSignatureURL("/assets/" + assetRet["_id"])
 	req.Method = "get"
 
 	server.Test(&req, func(msg *tests.MockResponse) {
