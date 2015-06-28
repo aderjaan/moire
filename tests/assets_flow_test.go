@@ -2,10 +2,11 @@ package tests
 
 import (
 	"fmt"
-	"log"
+	"net/url"
 	"strings"
 	"testing"
 
+	"github.com/bulletind/moire/config"
 	"github.com/bulletind/moire/server"
 	"gopkg.in/simversity/gottp.v3/tests"
 	"gopkg.in/simversity/gottp.v3/utils"
@@ -24,8 +25,6 @@ func TestCreateAsset(t *testing.T) {
 		"mime_type": "image/png",
 		"name":      randSeq(10),
 	}
-
-	log.Println("Creating asset:", req.Data)
 
 	server.Test(&req, func(msg *tests.MockResponse) {
 		utils.Convert(&msg.Data, &assetRet)
@@ -94,8 +93,6 @@ func TestCreatePDF(t *testing.T) {
 		"name":      randSeq(10) + ".pdf",
 	}
 
-	log.Println("Creating asset:", req.Data)
-
 	server.Test(&req, func(msg *tests.MockResponse) {
 		utils.Convert(&msg.Data, &assetRet)
 
@@ -140,6 +137,93 @@ func TestSNSMessageIgnoredPath(t *testing.T) {
 		}
 
 		if !strings.Contains(msg.Message, "not meant to be monitored") {
+			t.Error(exception)
+		}
+	})
+}
+
+func TestSNSMessageNotFound(t *testing.T) {
+	server := server.MockDBServer()
+	defer server.Close()
+
+	//parsed_url, err := url.Parse(assetRet["upload_url"])
+	//if err != nil {
+	//	t.Error(err.Error())
+	//	return
+	//}
+
+	//upload_path := parsed_url.Path
+
+	snsString := fmt.Sprintf(`{
+		"Type" : "Notification",
+		"MessageId" : "12",
+		"TopicArn" : "arn",
+		"Subject" : "Amazon S3 Notification",
+		"Message" : "{\"Records\":[{\"s3\":{\"bucket\":{\"name\":\"sc-gallery\"},\"object\":{\"key\":\"%v\",\"size\":71501}}}]}",
+		"Timestamp" : "2015-04-14T03:48:23.584Z",
+		"SignatureVersion" : "1",
+		"Signature" : "liP1M"
+	}`, "original_file/134444")
+	//strings.TrimPrefix(upload_path, "/"))
+
+	req := tests.MockRequest{}
+	req.Url = "/notify/sns/"
+	req.Method = "post"
+	req.Data = map[string]interface{}{}
+	utils.Decoder([]byte(snsString), &req.Data)
+
+	server.Test(&req, func(msg *tests.MockResponse) {
+		exception := "This asset should not be found."
+		if msg.Status != 500 {
+			t.Error(exception)
+		}
+
+		if !strings.Contains(msg.Message, "not found") {
+			t.Error(exception)
+		}
+	})
+}
+
+func TestSNSMessage(t *testing.T) {
+	server := server.MockDBServer()
+	defer server.Close()
+
+	parsed_url, err := url.Parse(assetRet["upload_url"])
+	if err != nil {
+		t.Error(err.Error())
+		return
+	}
+
+	upload_path := parsed_url.Path
+
+	fmt.Println("Submitting messages for", upload_path)
+
+	snsString := fmt.Sprintf(`{
+		"Type" : "Notification",
+		"MessageId" : "12",
+		"TopicArn" : "arn",
+		"Subject" : "Amazon S3 Notification",
+		"Message" : "{\"Records\":[{\"s3\":{\"bucket\":{\"name\":\"%v\"},\"object\":{\"key\":\"%v\",\"size\":71501}}}]}",
+		"Timestamp" : "2015-04-14T03:48:23.584Z",
+		"SignatureVersion" : "1",
+		"Signature" : "liP1M"
+	}`, config.Settings.S3.Bucket, strings.TrimPrefix(upload_path, "/"))
+
+	req := tests.MockRequest{}
+	req.Url = "/notify/sns/"
+	req.Method = "post"
+	req.Data = map[string]interface{}{}
+	utils.Decoder([]byte(snsString), &req.Data)
+
+	server.Test(&req, func(msg *tests.MockResponse) {
+		fmt.Println(msg)
+
+		exception := "This asset should be marked as ready."
+		if msg.Status != 200 {
+			t.Error(exception)
+		}
+
+		if msg.Message != "" {
 			t.Error(exception)
 		}
 	})
