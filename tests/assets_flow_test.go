@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"gopkg.in/bulletind/moire/server"
+	"github.com/bulletind/moire/server"
 	"gopkg.in/simversity/gottp.v3/tests"
 	"gopkg.in/simversity/gottp.v3/utils"
 )

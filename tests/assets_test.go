@@ -1,13 +1,10 @@
 package tests
 
 import (
-	"log"
-	"strings"
 	"testing"
 
-	"gopkg.in/bulletind/moire/server"
+	"github.com/bulletind/moire/server"
 	"gopkg.in/simversity/gottp.v3/tests"
-	"gopkg.in/simversity/gottp.v3/utils"
 )
 
 func TestCreateAssetFail(t *testing.T) {
