@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/kr/pretty"
+
 	"github.com/bulletind/moire/config"
 	"github.com/bulletind/moire/server"
 	"github.com/bulletind/moire/signature"
@@ -17,7 +19,7 @@ import (
 
 var assetRet = map[string]string{}
 
-func TestCreateAsset(t *testing.T) {
+func TestCreatePDF(t *testing.T) {
 	server := server.MockDBServer()
 	defer server.Close()
 
@@ -25,7 +27,7 @@ func TestCreateAsset(t *testing.T) {
 	req.Url = "/assets"
 	req.Method = "post"
 	req.Data = map[string]interface{}{
-		"mime_type": "image/png",
+		"mime_type": "application/pdf",
 		"name":      randSeq(10),
 	}
 
@@ -33,37 +35,41 @@ func TestCreateAsset(t *testing.T) {
 		utils.Convert(&msg.Data, &assetRet)
 
 		if msg.Status != 200 {
+			fmt.Printf("%# v", pretty.Formatter(msg))
 			t.Error("Asset creation should return status 200.")
 		}
 
 		for _, key := range []string{"upload_url", "url", "_id"} {
 			if val, ok := assetRet[key]; !ok || len(val) == 0 {
+				fmt.Printf("%# v", pretty.Formatter(msg))
 				t.Error(key + " should be a valid string in creation return.")
 			}
 		}
 	})
 }
 
-func TestGetAsset(t *testing.T) {
+func TestGetPDF(t *testing.T) {
 	server := server.MockDBServer()
 	defer server.Close()
 
 	req := tests.MockRequest{}
-	req.Url = "/assets/" + assetRet["_id"] + "/?no_redirect=true"
+	req.Url = "/assets/" + assetRet["_id"]
 	req.Method = "get"
 
 	server.Test(&req, func(msg *tests.MockResponse) {
 		if msg.Status != 404 {
+			fmt.Printf("%# v", pretty.Formatter(msg))
 			t.Error("Message should be in pending state.")
 		}
 
 		if !strings.Contains(msg.Message, "content is still being uploaded") {
+			fmt.Printf("%# v", pretty.Formatter(msg))
 			t.Error("Message should be in pending state.")
 		}
 	})
 }
 
-func TestGetAssetThumbnail(t *testing.T) {
+func TestPDFThumbnailNoRedirect(t *testing.T) {
 	server := server.MockDBServer()
 	defer server.Close()
 
@@ -75,38 +81,36 @@ func TestGetAssetThumbnail(t *testing.T) {
 		exception := "Message should be in pending state."
 
 		if msg.Status != 404 {
+			fmt.Printf("%# v", pretty.Formatter(msg))
 			t.Error(exception)
 		}
 
 		if !strings.Contains(msg.Message, "content is still being uploaded") {
+			fmt.Printf("%# v", pretty.Formatter(msg))
 			t.Error(exception)
 		}
 	})
 }
 
-func TestCreatePDF(t *testing.T) {
+func TestPDFThumbnailGetDefault(t *testing.T) {
 	server := server.MockDBServer()
 	defer server.Close()
 
 	req := tests.MockRequest{}
-	req.Url = "/assets"
-	req.Method = "post"
-	req.Data = map[string]interface{}{
-		"mime_type": "application/pdf",
-		"name":      randSeq(10) + ".pdf",
-	}
+	req.Url = "/assets/" + assetRet["_id"] + "/thumbnail/"
+	req.Method = "get"
 
 	server.Test(&req, func(msg *tests.MockResponse) {
-		utils.Convert(&msg.Data, &assetRet)
+		exception := "Message should be in pending state."
 
-		if msg.Status != 200 {
-			t.Error("Asset creation should return status 200.")
+		if msg.Status != 301 {
+			fmt.Printf("%# v", pretty.Formatter(msg))
+			t.Error(exception)
 		}
 
-		for _, key := range []string{"upload_url", "url", "_id"} {
-			if val, ok := assetRet[key]; !ok || len(val) == 0 {
-				t.Error(key + " should be a valid string in creation return.")
-			}
+		if !strings.Contains(msg.Message, "attachment.png") {
+			fmt.Printf("%# v", pretty.Formatter(msg))
+			t.Error(exception)
 		}
 	})
 }
@@ -136,10 +140,12 @@ func TestSNSMessageIgnoredPath(t *testing.T) {
 		exception := "This path should have been ignroed."
 
 		if msg.Status != 400 {
+			fmt.Printf("%# v", pretty.Formatter(msg))
 			t.Error(exception)
 		}
 
 		if !strings.Contains(msg.Message, "not meant to be monitored") {
+			fmt.Printf("%# v", pretty.Formatter(msg))
 			t.Error(exception)
 		}
 	})
@@ -178,10 +184,12 @@ func TestSNSMessageNotFound(t *testing.T) {
 	server.Test(&req, func(msg *tests.MockResponse) {
 		exception := "This asset should not be found."
 		if msg.Status != 500 {
+			fmt.Printf("%# v", pretty.Formatter(msg))
 			t.Error(exception)
 		}
 
 		if !strings.Contains(msg.Message, "not found") {
+			fmt.Printf("%# v", pretty.Formatter(msg))
 			t.Error(exception)
 		}
 	})
@@ -221,37 +229,41 @@ func TestSNSMessage(t *testing.T) {
 	server.Test(&req, func(msg *tests.MockResponse) {
 		exception := "This asset should be marked as ready."
 		if msg.Status != 200 {
+			fmt.Printf("%# v", pretty.Formatter(msg))
 			t.Error(exception)
 		}
 
 		if msg.Message != "" {
+			fmt.Printf("%# v", pretty.Formatter(msg))
 			t.Error(exception)
 		}
 	})
 }
 
-func TestGetAssetNeedSignature(t *testing.T) {
+func TestGetPDFNeedSignature(t *testing.T) {
 	server := server.MockDBServer()
 	defer server.Close()
 
 	req := tests.MockRequest{}
 	config.Settings.Moire.SignRequests = true
-	req.Url = "/assets/" + assetRet["_id"] + "/?no_redirect=true"
+	req.Url = "/assets/" + assetRet["_id"]
 	req.Method = "get"
 
 	server.Test(&req, func(msg *tests.MockResponse) {
 		exception := "This asset should be marked as ready."
 		if msg.Status != 412 {
+			fmt.Printf("%# v", pretty.Formatter(msg))
 			t.Error(exception)
 		}
 
 		if !strings.Contains(msg.Message, "required parameter") {
+			fmt.Printf("%# v", pretty.Formatter(msg))
 			t.Error(exception)
 		}
 	})
 }
 
-func TestGetAssetWithSignature(t *testing.T) {
+func TestGetPDFWithSignature(t *testing.T) {
 	server := server.MockDBServer()
 	defer server.Close()
 
@@ -266,10 +278,9 @@ func TestGetAssetWithSignature(t *testing.T) {
 	sign := signature.MakeSignature(public_key, private_key, path)
 
 	values := url.Values{
-		"no_redirect": {"true"},
-		"signature":   {sign},
-		"timestamp":   {timestamp},
-		"public_key":  {public_key},
+		"signature":  {sign},
+		"timestamp":  {timestamp},
+		"public_key": {public_key},
 	}
 
 	sorted := values.Encode()
@@ -279,7 +290,7 @@ func TestGetAssetWithSignature(t *testing.T) {
 	req.Method = "get"
 
 	server.Test(&req, func(msg *tests.MockResponse) {
-		fmt.Println("***********")
+		fmt.Printf("%# v", pretty.Formatter(msg))
 		fmt.Println(msg.Error)
 	})
 }

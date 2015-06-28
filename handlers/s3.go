@@ -93,7 +93,7 @@ func getUploadURL(assetId string) string {
 
 func getThumbnailURL(asset *db.Asset) (url string, err error) {
 	if asset.FileType != VideoFile && asset.FileType != ImageFile {
-		err = errors.New(thumbNotAllowed)
+		err = errors.New(uploadInProgress)
 		url = attachmentUrl
 		return
 	}
