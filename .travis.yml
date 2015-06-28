@@ -1,31 +1,34 @@
 language: go
 
+services:
+    - mongodb
+
 go:
-- tip
+    - tip
 
 env:
-  global:
-    - PATH=$HOME/gopath/bin:$HOME/bin:$PATH
-    - ARTIFACTS_WORKING_DIR: $HOME/gopath/bin
-    - ARTIFACTS_TARGET_PATHS="$TRAVIS_BRANCH/$TRAVIS_JOB_NUMBER:$TRAVIS_BRANCH/latest"
-    - ARTIFACTS_PERMISSIONS=public-read
-    - ARTIFACTS_CACHE_CONTROL='public, max-age=315360000'
-    - ARTIFACTS_LOG_FORMAT=multiline
-    - ARTIFACTS_DEBUG=1
+    global:
+        - PATH=$HOME/gopath/bin:$HOME/bin:$PATH
+        - ARTIFACTS_WORKING_DIR: $HOME/gopath/bin
+        - ARTIFACTS_TARGET_PATHS="$TRAVIS_BRANCH/$TRAVIS_JOB_NUMBER:$TRAVIS_BRANCH/latest"
+        - ARTIFACTS_PERMISSIONS=public-read
+        - ARTIFACTS_CACHE_CONTROL='public, max-age=315360000'
+        - ARTIFACTS_LOG_FORMAT=multiline
+        - ARTIFACTS_DEBUG=1
 
 before_script:
-  - curl -sL https://raw.githubusercontent.com/travis-ci/artifacts/master/install | bash
+    - curl -sL https://raw.githubusercontent.com/travis-ci/artifacts/master/install | bash
 
 script:
-  - go test -v ./...
-  - go build -v ./...
+    - go test -v ./...
+    - go build -v ./...
 
 after_success:
-  - artifacts upload $HOME/gopath/bin/moire
+    - artifacts upload $HOME/gopath/bin/moire
 
 notifications:
-  email:
-    - piyush@piyushverma.net
-    - desaiparth08@gmail.com
+    email:
+        - piyush@piyushverma.net
+        - jos.vanvelzen@safetychanger.com
 
-  slack: safetychanger:iBdUKrm6abL7BQNtoIpihFA3
+slack: safetychanger:iBdUKrm6abL7BQNtoIpihFA3
