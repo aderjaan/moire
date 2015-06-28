@@ -228,3 +228,16 @@ func TestSNSMessage(t *testing.T) {
 		}
 	})
 }
+
+func TestGetAssetAfterSNS(t *testing.T) {
+	server := server.MockDBServer()
+	defer server.Close()
+
+	req := tests.MockRequest{}
+	req.Url = "/assets/" + assetRet["_id"] + "/?no_redirect=true"
+	req.Method = "get"
+
+	server.Test(&req, func(msg *tests.MockResponse) {
+		fmt.Println(msg)
+	})
+}
