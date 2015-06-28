@@ -218,14 +218,6 @@ func TestSNSMessageNotFound(t *testing.T) {
 	server := server.MockDBServer()
 	defer server.Close()
 
-	//parsed_url, err := url.Parse(assetRet["upload_url"])
-	//if err != nil {
-	//	t.Error(err.Error())
-	//	return
-	//}
-
-	//upload_path := parsed_url.Path
-
 	snsString := fmt.Sprintf(`{
 		"Type" : "Notification",
 		"MessageId" : "12",
@@ -236,7 +228,6 @@ func TestSNSMessageNotFound(t *testing.T) {
 		"SignatureVersion" : "1",
 		"Signature" : "liP1M"
 	}`, "original_file/134444")
-	//strings.TrimPrefix(upload_path, "/"))
 
 	req := tests.MockRequest{}
 	req.Url = "/notify/sns/"
