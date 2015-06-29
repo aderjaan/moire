@@ -82,7 +82,7 @@ func TestGetImageTimeout(t *testing.T) {
 
 	server.Test(&req, func(msg *tests.MockResponse) {
 		elapsed := time.Since(time1)
-		if elapsed < 5*time.Second {
+		if elapsed < time.Duration(config.Settings.Moire.ImageTimeout)*time.Second {
 			fmt.Printf("%# v", pretty.Formatter(msg))
 			t.Error("Should have taken more than 5 seconds to return")
 		}

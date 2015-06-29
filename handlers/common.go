@@ -38,7 +38,7 @@ func updateAsset(conn *db.MConn, _id string, doc db.M) {
 }
 
 func pollUntilReady(conn *db.MConn, _id string) {
-	timeout := time.After(5 * time.Second)
+	timeout := time.After(time.Duration(config.Settings.Moire.ImageTimeout) * time.Second)
 	tick := time.Tick(1000 * time.Millisecond)
 	// Keep trying until we're timed out or got a result or got an error
 	for {
