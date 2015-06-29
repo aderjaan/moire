@@ -47,6 +47,7 @@ func MockDBServer() (server *tests.MockServer) {
 		config.Settings.Moire.DBName = "gallery-testing"
 		config.Settings.Moire.SignRequests = true
 		config.Settings.Gottp.EmailDummy = true
+		config.Settings.Moire.ImageTimeout = 5
 		Setup()
 	}
 
