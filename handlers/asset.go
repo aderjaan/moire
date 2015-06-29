@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/bulletind/moire/db"
 	"gopkg.in/simversity/gottp.v3"
 )
 
@@ -32,6 +33,10 @@ func (self *Asset) Get(request *gottp.Request) {
 	}
 
 	_, no_redirect := request.GetArgument("no_redirect").(string)
+
+	if asset.Status != db.READY && asset.FileType == ImageFile {
+		pollUntilReady(conn, _id)
+	}
 
 	url, err := getURL(asset)
 

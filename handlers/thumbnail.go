@@ -208,6 +208,11 @@ func (self *Thumbnail) Get(request *gottp.Request) {
 	conn := getConn()
 	asset := getAsset(conn, _id)
 
+	if asset.Status != db.READY && asset.FileType == ImageFile {
+		pollUntilReady(conn, _id)
+		asset = getAsset(conn, _id)
+	}
+
 	args := thumbArgs{}
 	request.ConvertArguments(&args)
 
