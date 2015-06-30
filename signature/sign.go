@@ -42,8 +42,8 @@ func isTimestampValid(signed_on string) error {
 	return nil
 }
 
-func canonicalQuery(public_key string) string {
-	values := url.Values{"public_key": {public_key}}
+func canonicalQuery(public_key, timesamp string) string {
+	values := url.Values{"public_key": {public_key}, "timesamp": {timesamp}}
 	sorted := values.Encode()
 	escaped := strings.Replace(sorted, "+", "%20", -1)
 	return escaped
@@ -81,11 +81,11 @@ func stringToSign(path, query string) string {
 	return val
 }
 
-func MakeSignature(public_key, secret_key, path string) string {
+func MakeSignature(public_key, secret_key, timestamp, path string) string {
 	//Stage1: Find public Key
 
 	//Construct Canonical Query
-	query := canonicalQuery(public_key)
+	query := canonicalQuery(public_key, timestamp)
 	log.Println("CanonicalQuery:", query)
 
 	//Construct Path
@@ -114,7 +114,7 @@ func IsRequestValid(
 		return err
 	}
 
-	computed_signature := MakeSignature(public_key, private_key, path)
+	computed_signature := MakeSignature(public_key, private_key, timestamp, path)
 
 	log.Println("PublicKey:", public_key)
 	log.Println("PrivateKey:", private_key)

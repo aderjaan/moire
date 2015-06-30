@@ -24,7 +24,7 @@ func makeSignatureURL(path string) string {
 	private_key := signature.GetSecretKey(public_key)
 	timestamp := time.Now().Format(time.RFC3339)
 
-	sign := signature.MakeSignature(public_key, private_key, path)
+	sign := signature.MakeSignature(public_key, private_key, timestamp, path)
 
 	values := url.Values{
 		"signature":  {sign},
