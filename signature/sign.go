@@ -42,8 +42,8 @@ func isTimestampValid(signed_on string) error {
 	return nil
 }
 
-func canonicalQuery(public_key, timesamp string) string {
-	values := url.Values{"public_key": {public_key}, "timesamp": {timesamp}}
+func canonicalQuery(public_key, timestamp string) string {
+	values := url.Values{"public_key": {public_key}, "timestamp": {timestamp}}
 	sorted := values.Encode()
 	escaped := strings.Replace(sorted, "+", "%20", -1)
 	return escaped
