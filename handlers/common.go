@@ -1,18 +1,13 @@
 package handlers
 
 import (
+	"fmt"
 	"strings"
+	"time"
 
 	"github.com/bulletind/moire/config"
 	"github.com/bulletind/moire/db"
 	"gopkg.in/mgo.v2/bson"
-)
-
-const (
-	AudioFile = "audio"
-	ImageFile = "image"
-	VideoFile = "video"
-	PlainFile = "plain"
 )
 
 func getConn() *db.MConn {
@@ -39,6 +34,27 @@ func updateAsset(conn *db.MConn, _id string, doc db.M) {
 	err := conn.Update(db.ASSET, db.M{"_id": bson.ObjectIdHex(_id)}, doc)
 	if err != nil {
 		panic(err)
+	}
+}
+
+func pollUntilReady(conn *db.MConn, _id string) {
+	timeout := time.After(time.Duration(config.Settings.Moire.ImageTimeout) * time.Second)
+	tick := time.Tick(1000 * time.Millisecond)
+	// Keep trying until we're timed out or got a result or got an error
+	for {
+		select {
+		// Got a timeout! fail with a timeout error
+		case <-timeout:
+			fmt.Println("Timed Out")
+			return
+			// Got a tick, we should check on doSomething()
+		case <-tick:
+			asset := getAsset(conn, _id)
+			ok := asset.Status == db.READY
+			if ok {
+				return
+			}
+		}
 	}
 }
 

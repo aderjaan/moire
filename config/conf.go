@@ -21,6 +21,7 @@ type config struct {
 		DBPassword           string
 		FFmpeg               string
 		SignRequests         bool
+		ImageTimeout         int
 	}
 }
 
@@ -30,6 +31,7 @@ func (self *config) MakeConfig(configPath string) {
 	self.Moire.DBName = "gallery"
 	self.Moire.FFmpeg = "ffmpeg"
 	self.Moire.SignRequests = false
+	self.Moire.ImageTimeout = 30
 
 	self.S3.Region = "eu-west-1"
 	self.S3.Bucket = "moire-gallery"

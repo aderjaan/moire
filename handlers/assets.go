@@ -35,7 +35,7 @@ func (self *Assets) Post(request *gottp.Request) {
 		return
 	}
 
-	var fileType string
+	fileType := PlainFile
 
 	if strings.HasPrefix(args.MimeType, ImageFile) {
 		fileType = ImageFile
@@ -43,15 +43,6 @@ func (self *Assets) Post(request *gottp.Request) {
 		fileType = VideoFile
 	} else if strings.HasPrefix(args.MimeType, AudioFile) {
 		fileType = AudioFile
-	}
-
-	if !isMimeAllowed(fileType) {
-		request.Raise(gottp.HttpError{
-			http.StatusBadRequest,
-			"mime_type " + args.MimeType + " is not supported.",
-		})
-
-		return
 	}
 
 	args.fileType = fileType

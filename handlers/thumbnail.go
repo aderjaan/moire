@@ -208,8 +208,18 @@ func (self *Thumbnail) Get(request *gottp.Request) {
 	conn := getConn()
 	asset := getAsset(conn, _id)
 
+	if asset.Status != db.READY && asset.FileType == ImageFile {
+		pollUntilReady(conn, _id)
+		asset = getAsset(conn, _id)
+	}
+
 	args := thumbArgs{}
 	request.ConvertArguments(&args)
+
+	valid := ValidateSignature(request)
+	if valid == false {
+		return
+	}
 
 	var thumbUrl string
 
@@ -230,8 +240,6 @@ func (self *Thumbnail) Get(request *gottp.Request) {
 		request.Redirect(signedUrl, TemporaryRedirect)
 		return
 	}
-
-	ValidateSignature(request)
 
 	if signedUrl != "" {
 		thumbUrl = signedUrl

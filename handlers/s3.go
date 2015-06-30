@@ -92,35 +92,26 @@ func getUploadURL(assetId string) string {
 }
 
 func getThumbnailURL(asset *db.Asset) (url string, err error) {
-	if asset.FileType != VideoFile && asset.FileType != ImageFile {
-		err = errors.New(thumbNotAllowed)
-		url = attachmentUrl
-		return
+	var ok bool
+	url = asset.ThumbnailPath
+	if url == "" {
+		url, ok = thumbnailUrls[asset.FileType]
+		if !ok {
+			url = thumbnailUrls[PlainFile]
+		}
 	}
 
-	switch asset.Status {
-	case db.READY:
-		if asset.ThumbnailPath == "" {
-			url = missingUrl
-			err = errors.New(thumbUnavailable)
-		} else {
-			url = asset.ThumbnailPath
-		}
-		break
-	case db.LOST:
+	if asset.Status == db.LOST {
 		url = missingUrl
 		err = errors.New(thumbUnavailable)
-		break
-	default:
-		url = pendingUrl
+	} else if asset.Status != db.READY {
 		err = errors.New(uploadInProgress)
-		break
 	}
 
 	return
 }
 
-func getURL(asset *db.Asset, no_redirect bool) (url string, err error) {
+func getURL(asset *db.Asset) (url string, err error) {
 	switch asset.Status {
 	case db.READY:
 		url = getSignedURL(asset.Bucket, asset.Path)
@@ -129,11 +120,10 @@ func getURL(asset *db.Asset, no_redirect bool) (url string, err error) {
 		err = errors.New(contentUnavailable)
 		break
 	default:
-		if asset.FileType == ImageFile && no_redirect != true {
-			url = pendingUrl
-		} else {
-			err = errors.New(uploadInProgress)
+		if asset.FileType == ImageFile {
+			url = thumbnailUrls[ImageFile]
 		}
+		err = errors.New(uploadInProgress)
 		break
 	}
 

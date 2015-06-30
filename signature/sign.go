@@ -42,8 +42,8 @@ func isTimestampValid(signed_on string) error {
 	return nil
 }
 
-func canonicalQuery(uri *url.URL) string {
-	values := getValues(uri)
+func canonicalQuery(public_key string) string {
+	values := url.Values{"public_key": {public_key}}
 	sorted := values.Encode()
 	escaped := strings.Replace(sorted, "+", "%20", -1)
 	return escaped
@@ -81,15 +81,14 @@ func stringToSign(path, query string) string {
 	return val
 }
 
-func makeSignature(public_key, secret_key string, uri *url.URL) string {
+func MakeSignature(public_key, secret_key, path string) string {
 	//Stage1: Find public Key
 
 	//Construct Canonical Query
-	query := canonicalQuery(uri)
+	query := canonicalQuery(public_key)
 	log.Println("CanonicalQuery:", query)
 
 	//Construct Path
-	path := canonicalPath(uri)
 	log.Println("CanonicalPath:", path)
 
 	//Sign the strings, by joining \n
@@ -107,8 +106,7 @@ func makeSignature(public_key, secret_key string, uri *url.URL) string {
 }
 
 func IsRequestValid(
-	public_key, private_key, timestamp, signature string,
-	url_struct *url.URL,
+	public_key, private_key, timestamp, signature, path string,
 ) error {
 
 	err := isTimestampValid(timestamp)
@@ -116,12 +114,10 @@ func IsRequestValid(
 		return err
 	}
 
-	values := getValues(url_struct)
-	values.Del("signature")
-	url_struct.RawQuery = values.Encode()
+	computed_signature := MakeSignature(public_key, private_key, path)
 
-	log.Println("Computing signature. PublicKey:", public_key, "PrivateKey:", private_key)
-	computed_signature := makeSignature(public_key, private_key, url_struct)
+	log.Println("PublicKey:", public_key)
+	log.Println("PrivateKey:", private_key)
 	log.Println("Computed: => ", computed_signature)
 
 	if signature != computed_signature {

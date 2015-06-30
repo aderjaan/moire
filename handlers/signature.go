@@ -8,9 +8,9 @@ import (
 	"gopkg.in/simversity/gottp.v3"
 )
 
-func ValidateSignature(request *gottp.Request) {
+func ValidateSignature(request *gottp.Request) bool {
 	if config.Settings.Moire.SignRequests != true {
-		return
+		return true
 	}
 
 	public_key, ok := request.GetArgument("public_key").(string)
@@ -19,7 +19,7 @@ func ValidateSignature(request *gottp.Request) {
 			http.StatusPreconditionFailed,
 			"public_key is a required parameter",
 		})
-		return
+		return false
 	}
 
 	private_key := signature.GetSecretKey(public_key)
@@ -28,7 +28,7 @@ func ValidateSignature(request *gottp.Request) {
 			http.StatusForbidden,
 			"Invalid public_key supplied",
 		})
-		return
+		return false
 	}
 
 	timestamp, ok := request.GetArgument("timestamp").(string)
@@ -37,7 +37,7 @@ func ValidateSignature(request *gottp.Request) {
 			http.StatusPreconditionFailed,
 			"timestamp is a required parameter",
 		})
-		return
+		return false
 	}
 
 	sign, ok := request.GetArgument("signature").(string)
@@ -46,7 +46,7 @@ func ValidateSignature(request *gottp.Request) {
 			http.StatusPreconditionFailed,
 			"signature is a required parameter",
 		})
-		return
+		return false
 	}
 
 	sign_error := signature.IsRequestValid(
@@ -54,11 +54,13 @@ func ValidateSignature(request *gottp.Request) {
 		private_key,
 		timestamp,
 		sign,
-		request.Request.URL,
+		request.Request.URL.Path,
 	)
 
 	if sign_error != nil {
 		request.Raise(gottp.HttpError{http.StatusNotFound, sign_error.Error()})
-		return
+		return false
 	}
+
+	return true
 }
