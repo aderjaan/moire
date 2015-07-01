@@ -64,10 +64,7 @@ func (self *SNS) Post(request *gottp.Request) {
 		return
 	}
 
-	doc := db.M{
-		"size":   record.S3.Object.Size,
-		"status": db.READY,
-	}
+	doc := db.M{"size": record.S3.Object.Size}
 
 	conn := getConn()
 	asset := assetReady(conn, key, record.S3.Bucket.Name, db.M{"$set": doc})
@@ -82,7 +79,10 @@ func (self *SNS) Post(request *gottp.Request) {
 		optimizeThumbnail(thumbPath)
 
 		uploadFile(asset.Bucket, thumbnailPath, thumbPath)
-		updateAsset(conn, assetId, db.M{"$set": db.M{"thumbnail_path": thumbnailPath}})
+		updateAsset(
+			conn, assetId,
+			db.M{"$set": db.M{"thumbnail_path": thumbnailPath, "status": db.READY}},
+		)
 
 		cleanupThumbnail(thumbPath)
 
@@ -92,9 +92,15 @@ func (self *SNS) Post(request *gottp.Request) {
 		optimizeThumbnail(thumbPath)
 
 		uploadFile(asset.Bucket, thumbnailPath, thumbPath)
-		updateAsset(conn, assetId, db.M{"$set": db.M{"thumbnail_path": thumbnailPath}})
+		updateAsset(
+			conn, assetId,
+			db.M{"$set": db.M{"thumbnail_path": thumbnailPath, "status": db.READY}},
+		)
 
 		cleanupThumbnail(thumbPath)
+
+	} else {
+		updateAsset(conn, assetId, db.M{"$set": db.M{"status": db.READY}})
 	}
 
 	request.Write("asset " + assetId + " marked as ready")
