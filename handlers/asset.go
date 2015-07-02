@@ -36,6 +36,7 @@ func (self *Asset) Get(request *gottp.Request) {
 
 	if asset.Status != db.READY && asset.FileType == ImageFile {
 		pollUntilReady(conn, _id)
+		asset = getAsset(conn, _id)
 	}
 
 	url, err := getURL(asset)
