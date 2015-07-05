@@ -9,6 +9,7 @@ import (
 	"mime"
 	"path"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/bulletind/moire/config"
@@ -82,6 +83,10 @@ func getS3Reader(bucket, path string) (io.ReadCloser, error) {
 }
 
 func getSignedURL(bucket, path string) string {
+	if strings.HasPrefix(path, "http") {
+		return path
+	}
+
 	b := getBucket(bucket)
 	return b.SignedURL(path, time.Now().Add(time.Hour))
 }
@@ -92,13 +97,9 @@ func getUploadURL(assetId string) string {
 }
 
 func getThumbnailURL(asset *db.Asset) (url string, err error) {
-	var ok bool
 	url = asset.ThumbnailPath
 	if url == "" {
-		url, ok = thumbnailUrls[asset.FileType]
-		if !ok {
-			url = thumbnailUrls[PlainFile]
-		}
+		url = thumbnailUrls(asset.FileType)
 	}
 
 	if asset.Status == db.LOST {
@@ -121,7 +122,7 @@ func getURL(asset *db.Asset) (url string, err error) {
 		break
 	default:
 		if asset.FileType == ImageFile {
-			url = thumbnailUrls[ImageFile]
+			url = thumbnailUrls(ImageFile)
 		}
 		err = errors.New(uploadInProgress)
 		break

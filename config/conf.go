@@ -22,6 +22,7 @@ type config struct {
 		FFmpeg               string
 		SignRequests         bool
 		ImageTimeout         int
+		StaticPath           string
 	}
 }
 
@@ -32,6 +33,7 @@ func (self *config) MakeConfig(configPath string) {
 	self.Moire.FFmpeg = "ffmpeg"
 	self.Moire.SignRequests = false
 	self.Moire.ImageTimeout = 30
+	self.Moire.StaticPath = "https://d3iyv3qavi6f2s.cloudfront.net/statics"
 
 	self.S3.Region = "eu-west-1"
 	self.S3.Bucket = "moire-gallery"

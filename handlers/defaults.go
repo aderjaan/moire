@@ -1,5 +1,10 @@
 package handlers
 
+import (
+	"github.com/bulletind/moire/config"
+	"path"
+)
+
 const (
 	AudioFile = "audio"
 	ImageFile = "image"
@@ -9,14 +14,20 @@ const (
 
 const UploadPrefix = "original_file"
 
-var thumbnailUrls = map[string]string{
-	AudioFile: "http://s3-eu-west-1.amazonaws.com/sc-gallery/attachment.png",
-	VideoFile: "http://s3-eu-west-1.amazonaws.com/sc-gallery/thumbnail.png",
-	ImageFile: "http://s3-eu-west-1.amazonaws.com/sc-gallery/thumbnail.png",
-	PlainFile: "http://s3-eu-west-1.amazonaws.com/sc-gallery/attachment.png",
+func thumbnailUrls(fileType string) string {
+	switch fileType {
+	case AudioFile:
+		return path.Join(config.Settings.Moire.StaticPath, "/placeholders/audio.png")
+	case VideoFile:
+		return path.Join(config.Settings.Moire.StaticPath, "/placeholders/video.png")
+	case ImageFile:
+		return path.Join(config.Settings.Moire.StaticPath, "/placeholders/thumbnail.png")
+	default:
+		return path.Join(config.Settings.Moire.StaticPath, "/placeholders/attachment.png")
+	}
 }
 
-const missingUrl = "http://s3-eu-west-1.amazonaws.com/sc-gallery/missing.png"
+const missingUrl = "https://s3-eu-west-1.amazonaws.com/sc-gallery/missing.png"
 
 const thumbUnavailable = "Ouch! This thumbnail is no longer available."
 const uploadInProgress = "This content is still being uploaded. We appreciate your impatience"
