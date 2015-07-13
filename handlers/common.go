@@ -99,7 +99,7 @@ func createAsset(conn *db.MConn, args *assetArgs) *db.Asset {
 		FileType:  args.fileType,
 		MimeType:  args.MimeType,
 		Status:    db.PENDING,
-		Path:      getUploadURL(assetId.Hex()),
+		Path:      getUploadURL(assetId.Hex(), args.Name),
 	}
 
 	conn.Insert(db.ASSET, &asset)

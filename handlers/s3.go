@@ -11,12 +11,29 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/bulletind/moire/config"
 	"github.com/bulletind/moire/db"
 	"gopkg.in/bulletind/goamz.v1/aws"
 	"gopkg.in/bulletind/goamz.v1/s3"
 )
+
+func GenerateSlug(str string) (slug string) {
+	return strings.Map(func(r rune) rune {
+		switch {
+		case r == '.':
+			return '.'
+		case r == ' ', r == '-':
+			return '-'
+		case r == '_', unicode.IsLetter(r), unicode.IsDigit(r):
+			return r
+		default:
+			return -1
+		}
+		return -1
+	}, strings.ToLower(strings.TrimSpace(str)))
+}
 
 func getRegion() aws.Region {
 	return aws.Regions[config.Settings.S3.Region]
@@ -91,9 +108,14 @@ func getSignedURL(bucket, path string) string {
 	return b.SignedURL(path, time.Now().Add(time.Hour))
 }
 
-func getUploadURL(assetId string) string {
+func getThumbnailUploadURL(assetId, fileName string) string {
 	seperator := "/"
-	return path.Join(seperator, UploadPrefix, assetId, randSeq(10))
+	return path.Join(seperator, "thumbnail", assetId, randSeq(10), GenerateSlug(fileName))
+}
+
+func getUploadURL(assetId, fileName string) string {
+	seperator := "/"
+	return path.Join(seperator, UploadPrefix, assetId, randSeq(10), GenerateSlug(fileName))
 }
 
 func getThumbnailURL(asset *db.Asset) (url string, err error) {

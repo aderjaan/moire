@@ -3,7 +3,6 @@ package handlers
 import (
 	"net/http"
 	"net/url"
-	"path"
 	"strings"
 
 	"github.com/bulletind/moire/db"
@@ -71,7 +70,7 @@ func (self *SNS) Post(request *gottp.Request) {
 
 	assetId := asset.Id.Hex()
 
-	thumbnailPath := path.Join("/", "thumbnail", assetId)
+	thumbnailPath := getThumbnailUploadURL(assetId, asset.Name)
 
 	if asset.FileType == VideoFile {
 

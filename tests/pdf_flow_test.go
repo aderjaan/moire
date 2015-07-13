@@ -37,6 +37,48 @@ func makeSignatureURL(path string) string {
 	return path + "?" + escaped
 }
 
+func TestCreatePDFURLName(t *testing.T) {
+	server := server.MockDBServer()
+	defer server.Close()
+
+	f1 := randSeq(5)
+	f2 := randSeq(10)
+	f3 := randSeq(3)
+
+	name := fmt.Sprintf("%v--%v//-%v.pdf", f1, f2, f3)
+
+	req := tests.MockRequest{}
+	req.Url = "/assets"
+	req.Method = "post"
+	req.Data = map[string]interface{}{
+		"mime_type": "application/pdf",
+		"name":      name,
+	}
+
+	server.Test(&req, func(msg *tests.MockResponse) {
+		utils.Convert(&msg.Data, &assetRet)
+
+		if msg.Status != 200 {
+			fmt.Printf("%# v", pretty.Formatter(msg))
+			t.Error("Asset creation should return status 200.")
+			return
+		}
+
+		upload_url, err := url.Parse(assetRet["upload_url"])
+		if err != nil {
+			t.Error(err.Error())
+			return
+		}
+
+		fmt.Println(assetRet["upload_url"])
+		if !strings.HasSuffix(upload_url.Path, ".pdf") {
+			t.Error("URL must end with pdf. Found: " + upload_url.Path)
+			return
+		}
+
+	})
+}
+
 func TestCreatePDF(t *testing.T) {
 	server := server.MockDBServer()
 	defer server.Close()
