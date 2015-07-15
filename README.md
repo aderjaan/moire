@@ -10,5 +10,10 @@ export GOPATH=$HOME/go
 export PATH=$PATH:$GOPATH/bin
 cd $GOPATH
 go get github.com/bulletind/moire
-
 ```
+
+## Install and run
+
+* Make sure mongo is running
+* cd src/github.com/bulletind/moire
+* `go install && moire`
