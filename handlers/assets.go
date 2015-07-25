@@ -15,9 +15,10 @@ type Assets struct {
 }
 
 type assetArgs struct {
-	fileType string
-	Name     string `json:"name" required:"true"`
-	MimeType string `json:"mime_type" required:"true"`
+	fileType   string
+	Name       string `json:"name" required:"true"`
+	MimeType   string `json:"mime_type" required:"true"`
+	Collection string `json:"collection"`
 }
 
 func (self *Assets) Post(request *gottp.Request) {

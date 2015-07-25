@@ -91,15 +91,20 @@ func assetReady(conn *db.MConn, path, bucket string, doc db.M) *db.Asset {
 func createAsset(conn *db.MConn, args *assetArgs) *db.Asset {
 	assetId := bson.NewObjectId()
 
+	if args.Collection == "" {
+		args.Collection = DefaultCollection
+	}
+
 	asset := db.Asset{
-		Id:        assetId,
-		CreatedOn: db.EpochNow(),
-		Name:      args.Name,
-		Bucket:    config.Settings.S3.Bucket,
-		FileType:  args.fileType,
-		MimeType:  args.MimeType,
-		Status:    db.PENDING,
-		Path:      getUploadURL(assetId.Hex(), args.Name),
+		Id:         assetId,
+		CreatedOn:  db.EpochNow(),
+		Name:       args.Name,
+		Bucket:     config.Settings.S3.Bucket,
+		FileType:   args.fileType,
+		MimeType:   args.MimeType,
+		Status:     db.PENDING,
+		Collection: args.Collection,
+		Path:       getUploadURL(assetId.Hex(), args.Collection, args.Name),
 	}
 
 	conn.Insert(db.ASSET, &asset)

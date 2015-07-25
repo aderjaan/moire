@@ -19,6 +19,7 @@ type Asset struct {
 	MimeType      string            `json:"mime_type" bson:"mime_type"`
 	Bucket        string            `json:"bucket" bson:"bucket"`
 	Path          string            `json:"path" bson:"path"`
+	Collection    string            `json:"collection" bson:"collection"`
 	ThumbnailPath string            `json:"thumbnail_path" bson:"thumbnail_path"`
 	Status        string            `json:"status" bson:"status"`
 	Thumbnails    map[string]string `json:"-" bson:"thumbnails"`

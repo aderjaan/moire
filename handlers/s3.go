@@ -108,14 +108,24 @@ func getSignedURL(bucket, path string) string {
 	return b.SignedURL(path, time.Now().Add(time.Hour))
 }
 
-func getThumbnailUploadURL(assetId, fileName string) string {
+func makeUploadURL(assetId, collection, filename, prefix string) string {
 	seperator := "/"
-	return path.Join(seperator, "thumbnail", assetId, randSeq(10), GenerateSlug(fileName))
+	return path.Join(
+		seperator,
+		collection,
+		assetId,
+		prefix,
+		randSeq(10),
+		GenerateSlug(filename),
+	)
 }
 
-func getUploadURL(assetId, fileName string) string {
-	seperator := "/"
-	return path.Join(seperator, UploadPrefix, assetId, randSeq(10), GenerateSlug(fileName))
+func getThumbnailUploadURL(assetId, collection, fileName string) string {
+	return makeUploadURL(assetId, collection, fileName, "thumbnail")
+}
+
+func getUploadURL(assetId, collection, fileName string) string {
+	return makeUploadURL(assetId, collection, fileName, UploadPrefix)
 }
 
 func getThumbnailURL(asset *db.Asset) (url string, err error) {

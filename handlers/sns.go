@@ -54,7 +54,7 @@ func (self *SNS) Post(request *gottp.Request) {
 		return
 	}
 
-	if !strings.HasPrefix(key, UploadPrefix) {
+	if !strings.Contains(key, UploadPrefix) {
 		request.Raise(gottp.HttpError{
 			http.StatusBadRequest,
 			"Skipping path as its not meant to be monitored.",
@@ -70,7 +70,7 @@ func (self *SNS) Post(request *gottp.Request) {
 
 	assetId := asset.Id.Hex()
 
-	thumbnailPath := getThumbnailUploadURL(assetId, asset.Name)
+	thumbnailPath := getThumbnailUploadURL(assetId, asset.Collection, asset.Name)
 
 	if asset.FileType == VideoFile {
 

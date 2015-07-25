@@ -12,6 +12,7 @@ const (
 	PlainFile = "plain"
 )
 
+const DefaultCollection = "assets"
 const UploadPrefix = "original_file"
 
 func thumbnailUrls(fileType string) string {
