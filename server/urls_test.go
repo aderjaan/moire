@@ -7,7 +7,7 @@ import (
 )
 
 func TestUrls(t *testing.T) {
-	server := MockServer()
+	server := MockDBServer()
 	defer server.Close()
 
 	req := tests.MockRequest{}
