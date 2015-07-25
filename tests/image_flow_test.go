@@ -7,8 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kr/pretty"
-
 	"github.com/bulletind/moire/config"
 	"github.com/bulletind/moire/server"
 
@@ -34,14 +32,16 @@ func TestCreateImage(t *testing.T) {
 		utils.Convert(&msg.Data, &imageRet)
 
 		if msg.Status != 200 {
-			fmt.Printf("%# v", pretty.Formatter(msg))
-			t.Error("Asset creation should return status 200.")
+			reason := "Asset creation should return status 200."
+			log.Error("Test Failed", "reason", reason, "msg", msg)
+			t.Error(reason)
 		}
 
 		for _, key := range []string{"upload_url", "url", "_id"} {
 			if val, ok := imageRet[key]; !ok || len(val) == 0 {
-				fmt.Printf("%# v", pretty.Formatter(msg))
-				t.Error(key + " should be a valid string in creation return.")
+				reason := " should be a valid string in creation return."
+				log.Error("Test Failed", "reason", reason, "key", key)
+				t.Error(key + reason)
 			}
 		}
 	})
@@ -59,12 +59,12 @@ func TestGetImageNeedSignature(t *testing.T) {
 	server.Test(&req, func(msg *tests.MockResponse) {
 		exception := "This asset needs signature."
 		if msg.Status != 412 {
-			fmt.Printf("%# v", pretty.Formatter(msg))
+			log.Error("Test Failed", "reason", exception, "msg", msg)
 			t.Error(exception)
 		}
 
 		if !strings.Contains(msg.Message, "required parameter") {
-			fmt.Printf("%# v", pretty.Formatter(msg))
+			log.Error("Test Failed", "reason", exception, "msg", msg)
 			t.Error(exception)
 		}
 	})
@@ -83,8 +83,9 @@ func TestGetImageTimeout(t *testing.T) {
 	server.Test(&req, func(msg *tests.MockResponse) {
 		elapsed := time.Since(time1)
 		if elapsed < time.Duration(config.Settings.Moire.ImageTimeout)*time.Second {
-			fmt.Printf("%# v", pretty.Formatter(msg))
-			t.Error("Should have taken more than 5 seconds to return")
+			reason := "Should have taken more than 5 seconds to return"
+			log.Error("Test Failed", "reason", reason, "msg", msg)
+			t.Error(reason)
 		}
 	})
 }
@@ -101,12 +102,12 @@ func TestGetImage(t *testing.T) {
 		exception := "Message should be in pending state."
 
 		if msg.Status != 301 {
-			fmt.Printf("%# v", pretty.Formatter(msg))
+			log.Error("Test Failed", "reason", exception, "msg", msg)
 			t.Error(exception)
 		}
 
 		if !strings.Contains(msg.Message, "thumbnail.png") {
-			fmt.Printf("%# v", pretty.Formatter(msg))
+			log.Error("Test Failed", "reason", exception, "msg", msg)
 			t.Error(exception)
 		}
 	})
@@ -123,12 +124,12 @@ func TestImageThumbnailNeedsSignature(t *testing.T) {
 	server.Test(&req, func(msg *tests.MockResponse) {
 		exception := "This asset needs signature."
 		if msg.Status != 412 {
-			fmt.Printf("%# v", pretty.Formatter(msg))
+			log.Error("Test Failed", "reason", exception, "msg", msg)
 			t.Error(exception)
 		}
 
 		if !strings.Contains(msg.Message, "required parameter") {
-			fmt.Printf("%# v", pretty.Formatter(msg))
+			log.Error("Test Failed", "reason", exception, "msg", msg)
 			t.Error(exception)
 		}
 	})
@@ -146,12 +147,12 @@ func TestImageThumbnailNoRedirect(t *testing.T) {
 		exception := "Message should be in pending state."
 
 		if msg.Status != 404 {
-			fmt.Printf("%# v", pretty.Formatter(msg))
+			log.Error("Test Failed", "reason", exception, "msg", msg)
 			t.Error(exception)
 		}
 
 		if !strings.Contains(msg.Message, "content is still being uploaded") {
-			fmt.Printf("%# v", pretty.Formatter(msg))
+			log.Error("Test Failed", "reason", exception, "msg", msg)
 			t.Error(exception)
 		}
 	})
@@ -169,12 +170,12 @@ func TestImageThumbnailGetDefault(t *testing.T) {
 		exception := "Message should be in pending state."
 
 		if msg.Status != 301 {
-			fmt.Printf("%# v", pretty.Formatter(msg))
+			log.Error("Test Failed", "reason", exception, "msg", msg)
 			t.Error(exception)
 		}
 
 		if !strings.Contains(msg.Message, "thumbnail.png") {
-			fmt.Printf("%# v", pretty.Formatter(msg))
+			log.Error("Test Failed", "reason", exception, "msg", msg)
 			t.Error(exception)
 		}
 	})
@@ -192,7 +193,7 @@ func TestImageSNSMessage(t *testing.T) {
 
 	upload_path := parsed_url.Path
 
-	fmt.Println("Submitting messages for", upload_path)
+	log.Debug("Submitting SNS Message", "path", upload_path)
 
 	snsString := fmt.Sprintf(`{
 		"Type" : "Notification",
@@ -212,15 +213,16 @@ func TestImageSNSMessage(t *testing.T) {
 	utils.Decoder([]byte(snsString), &req.Data)
 
 	server.Test(&req, func(msg *tests.MockResponse) {
-		exception := "This asset should be marked as ready."
 		if msg.Status != 500 {
-			fmt.Printf("%# v", pretty.Formatter(msg))
+			exception := "This asset should be marked as ready."
+			log.Error("Test Failed", "reason", exception, "msg", msg)
 			t.Error(exception)
 		}
 
 		if !strings.Contains(msg.Message, "ffmpeg") {
-			fmt.Printf("%# v", pretty.Formatter(msg))
-			t.Error("ffmpeg should not have been found.")
+			exception := "ffmpeg should not have been found."
+			log.Error("Test Failed", "reason", exception, "msg", msg)
+			t.Error(exception)
 		}
 	})
 }
@@ -235,8 +237,7 @@ func TestGetImageWithSignature(t *testing.T) {
 	req.Method = "get"
 
 	server.Test(&req, func(msg *tests.MockResponse) {
-		fmt.Printf("%# v", pretty.Formatter(msg))
-		fmt.Println(msg.Error)
+		log.Debug("GetImage", "msg", msg, "error", msg.Error)
 	})
 }
 
@@ -250,7 +251,6 @@ func TestGetThumbnailWithSignature(t *testing.T) {
 	req.Method = "get"
 
 	server.Test(&req, func(msg *tests.MockResponse) {
-		fmt.Printf("%# v", pretty.Formatter(msg))
-		fmt.Println(msg.Error)
+		log.Debug("GetThumbnail", "msg", msg, "error", msg.Error)
 	})
 }

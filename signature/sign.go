@@ -5,11 +5,13 @@ import (
 	"crypto/sha512"
 	"encoding/base64"
 	"errors"
-	"log"
+	"github.com/bulletind/moire/logger"
 	"net/url"
 	"strings"
 	"time"
 )
+
+var log = logger.Logger
 
 func getValues(uri *url.URL) url.Values {
 	return uri.Query()
@@ -26,10 +28,7 @@ func isTimestampValid(signed_on string) error {
 	max_time_skew := current_time.Add(5 * time.Minute)
 	max_time_offset := current_time.Add(-60 * time.Minute)
 
-	log.Println("Current:", current_time)
-	log.Println("Timestamp:", timestamp)
-	log.Println("Skew", max_time_skew)
-	log.Println("Offset", max_time_offset)
+	log.Debug("Timestamp valid?", "current", current_time, "Timestamp:", timestamp, "Skew", max_time_skew, "Offset", max_time_offset)
 
 	if timestamp.Sub(max_time_skew) > 0 {
 		return errors.New("Timestamp max skew validation error")
@@ -86,18 +85,15 @@ func MakeSignature(public_key, secret_key, timestamp, path string) string {
 
 	//Construct Canonical Query
 	query := canonicalQuery(public_key, timestamp)
-	log.Println("CanonicalQuery:", query)
-
-	//Construct Path
-	log.Println("CanonicalPath:", path)
+	log.Debug("Generating Signature", "Query", query, "Path", path)
 
 	//Sign the strings, by joining \n
 	signed_string := stringToSign(path, query)
-	log.Println("SignedString:", signed_string)
+	log.Debug("Generating Signature", "SignedString", signed_string)
 
 	//Create Sha512 HMAC string
 	hmac_string := makeHmac512(signed_string, secret_key)
-	log.Println("Hmac string:", hmac_string)
+	log.Debug("Generating Signature", "Hmac string", hmac_string)
 
 	//Encode the resultant to base64
 	base64_string := makeBase64(hmac_string)
@@ -116,12 +112,9 @@ func IsRequestValid(
 
 	computed_signature := MakeSignature(public_key, private_key, timestamp, path)
 
-	log.Println("PublicKey:", public_key)
-	log.Println("PrivateKey:", private_key)
-	log.Println("Computed: => ", computed_signature)
+	log.Debug("IsRequestValid", "PublicKey", public_key, "PrivateKey", private_key, "Computed", computed_signature)
 
 	if signature != computed_signature {
-		log.Println("Passed: => ", signature)
 		return errors.New("Invalid signature")
 	}
 

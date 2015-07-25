@@ -2,15 +2,16 @@ package db
 
 import (
 	"errors"
-	"log"
 	"sync"
 	"time"
 
+	"github.com/bulletind/moire/logger"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
 var Conn *MConn
+var log = logger.Logger
 
 func EpochHours() int64 {
 	now := time.Now()
@@ -124,10 +125,10 @@ func (self *MConn) findAndApply(table string, query M,
 	change.ReturnNew = true
 
 	coll := db.C(table)
-	log.Println(query)
+	log.Debug("FindAndApply", "query", query)
 	_, err := coll.Find(query).Apply(change, result)
 	if err != nil {
-		log.Println("Error Applying Changes", table, err)
+		log.Error("FindAndApply", "table", table, "error", err)
 	}
 	return err
 }
@@ -186,7 +187,7 @@ func (self *MConn) HintedGetOne(table string, query M,
 	cursor := self.getCursor(session, table, query).Hint(hint)
 	err := cursor.One(result)
 	if err != nil {
-		log.Println("Error fetching", table, err)
+		log.Error("HintedGetOne", "table", table, "error", err)
 	}
 
 	return err
@@ -201,7 +202,7 @@ func (self *MConn) GetOne(table string, query M,
 	cursor := self.getCursor(session, table, query)
 	err := cursor.One(result)
 	if err != nil {
-		log.Println("Error fetching", table, err)
+		log.Error("GetOne", "table", table, "error", err)
 	}
 
 	return err
@@ -216,7 +217,7 @@ func (self *MConn) HintedCount(table string, query M, hint string) int {
 		Select(M{"_id": 1}).Hint(hint)
 	count, err := cursor.Count()
 	if err != nil {
-		log.Println("Error Counting", table, err)
+		log.Error("HintedCount", "table", table, "error", err)
 	}
 
 	return count
@@ -230,7 +231,7 @@ func (self *MConn) Count(table string, query M) int {
 	cursor := self.getCursor(session, table, query).Select(M{"_id": 1})
 	count, err := cursor.Count()
 	if err != nil {
-		log.Println("Error Counting", table, err)
+		log.Error("Count", "table", table, "error", err)
 	}
 
 	return count
@@ -255,7 +256,7 @@ func (self *MConn) Upsert(table string, query M, doc M) error {
 	}
 
 	if err != nil {
-		log.Println("Error Upserting:", table, err)
+		log.Error("Upsert", "table", table, "error", err)
 	}
 	return err
 }
@@ -291,7 +292,7 @@ func (self *MConn) Update(table string, query M, doc M) error {
 	}
 
 	if update_err != nil {
-		log.Println("Error Updating:", table, update_err)
+		log.Error("Update", "table", table, "error", update_err)
 	}
 	return update_err
 }
@@ -309,7 +310,7 @@ func (self *MConn) Delete(table string, query M) error {
 	_, delete_err = coll.RemoveAll(query)
 
 	if delete_err != nil {
-		log.Println("Error Deleting:", table, delete_err)
+		log.Error("Delete", "table", table, "error", delete_err)
 	}
 
 	return delete_err

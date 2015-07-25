@@ -1,25 +1,26 @@
 package handlers
 
 import (
-	"fmt"
-	"os"
+	"github.com/bulletind/moire/logger"
 	"os/exec"
 	"strings"
 )
 
+var log = logger.Logger
+
 func printCommand(cmd *exec.Cmd) {
-	fmt.Printf("==> Executing: %s\n", strings.Join(cmd.Args, " "))
+	log.Debug("Command", "Executing", strings.Join(cmd.Args, " "))
 }
 
 func printError(err error) {
 	if err != nil {
-		os.Stderr.WriteString(fmt.Sprintf("==> Error: %s\n", err.Error()))
+		log.Debug("Command", "Error", err.Error())
 	}
 }
 
 func printOutput(outs []byte) {
 	if len(outs) > 0 {
-		fmt.Printf("==> Output: %s\n", string(outs))
+		log.Debug("Command", "Output", outs)
 	}
 }
 

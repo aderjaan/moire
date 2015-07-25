@@ -4,7 +4,6 @@ import (
 	"errors"
 	"io"
 	"io/ioutil"
-	"log"
 	"math/rand"
 	"mime"
 	"path"
@@ -71,7 +70,7 @@ func uploadFile(bucket, uploadUrl, filePath string) {
 
 	b := getBucket(bucket)
 
-	log.Println("Uploaading:", uploadUrl)
+	log.Debug("Uploaading to S3", "url", uploadUrl)
 	b.Put(uploadUrl, data, fileType, s3.PublicRead, s3.Options{})
 }
 

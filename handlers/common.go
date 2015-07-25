@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
@@ -45,7 +44,7 @@ func pollUntilReady(conn *db.MConn, _id string) {
 		select {
 		// Got a timeout! fail with a timeout error
 		case <-timeout:
-			fmt.Println("Timed Out")
+			log.Info("Long polling timed out", "_id", _id)
 			return
 			// Got a tick, we should check on doSomething()
 		case <-tick:
