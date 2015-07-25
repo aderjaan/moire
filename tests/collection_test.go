@@ -10,8 +10,6 @@ import (
 	"gopkg.in/simversity/gottp.v3/utils"
 )
 
-var assetRet = map[string]string{}
-
 func TestCreatePDFCollection(t *testing.T) {
 	server := server.MockDBServer()
 	defer server.Close()
@@ -21,14 +19,12 @@ func TestCreatePDFCollection(t *testing.T) {
 	req.Method = "post"
 	req.Data = map[string]interface{}{
 		"mime_type":  "application/pdf",
-		"name":       "testAsset",
-		"collection": "hello",
+		"name":       randSeq(10),
+		"collection": randSeq(5),
 	}
 
 	server.Test(&req, func(msg *tests.MockResponse) {
 		utils.Convert(&msg.Data, &assetRet)
-
-		fmt.Println(msg.Data)
 
 		if msg.Status != 200 {
 			fmt.Printf("%# v", pretty.Formatter(msg))
