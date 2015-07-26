@@ -17,8 +17,8 @@ env:
         - ARTIFACTS_DEBUG=1
 
 before_install:
-  - sudo apt-get update -qq
-  - sudo apt-get install -qq imagemagick
+    - sudo apt-get update -qq
+    - sudo apt-get install -qq imagemagick
 
 before_script:
     - curl -sL https://raw.githubusercontent.com/travis-ci/artifacts/master/install | bash
