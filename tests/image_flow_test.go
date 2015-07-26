@@ -218,7 +218,7 @@ func TestImageSNSMessage(t *testing.T) {
 			t.Error(exception)
 		}
 
-		if !strings.Contains(msg.Message, "mogrify") {
+		if !strings.Contains(msg.Message, "executable") {
 			fmt.Printf("%# v", pretty.Formatter(msg))
 			t.Error("mogrify: unrecognized option")
 		}
