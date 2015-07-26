@@ -145,7 +145,7 @@ func DownloadFile(url, loc string) error {
 		return err
 	}
 
-	resp, err := http.Get("http://example.com/")
+	resp, err := http.Get(url)
 	defer resp.Body.Close()
 
 	if err != nil {
@@ -173,8 +173,13 @@ func imageThumbnail(asset *db.Asset, sizeX, sizeY int) string {
 
 	if asset.FileType == ImageFile {
 		loc = path.Join("/", "tmp", assetId+"_"+randSeq(10))
-		DownloadFile(signedUrl, loc)
+		err := DownloadFile(signedUrl, loc)
 		defer cleanupThumbnail(loc)
+
+		if err != nil {
+			panic(err)
+		}
+
 	} else {
 		loc = signedUrl
 	}
