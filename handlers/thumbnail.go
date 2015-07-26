@@ -174,7 +174,7 @@ func imageThumbnail(asset *db.Asset, sizeX, sizeY int) string {
 	if asset.FileType == ImageFile {
 		loc = path.Join("/", "tmp", assetId+"_"+randSeq(10))
 		err := DownloadFile(signedUrl, loc)
-		defer cleanupThumbnail(loc)
+		//defer cleanupThumbnail(loc)
 
 		if err != nil {
 			panic(err)
