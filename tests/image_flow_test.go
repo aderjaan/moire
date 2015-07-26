@@ -218,9 +218,9 @@ func TestImageSNSMessage(t *testing.T) {
 			t.Error(exception)
 		}
 
-		if !strings.Contains(msg.Message, "ffmpeg") {
+		if !strings.Contains(msg.Message, "mogrify") {
 			fmt.Printf("%# v", pretty.Formatter(msg))
-			t.Error("ffmpeg should not have been found.")
+			t.Error("mogrify: unrecognized option")
 		}
 	})
 }
