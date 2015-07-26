@@ -174,7 +174,7 @@ func imageThumbnail(asset *db.Asset, sizeX, sizeY int) string {
 	}
 
 	imageThumber := exec.Command(
-		"mogrify", "-resize "+scale, "-gravity center", "-extent "+scale, "-format png", "-quality 75", thumbPath,
+		"mogrify", "-resize", scale, "-gravity", "center", "-extent", scale, "-format", "png", "-quality", "75", thumbPath,
 	)
 
 	execCommand(imageThumber)
