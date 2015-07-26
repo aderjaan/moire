@@ -138,7 +138,7 @@ func optimizeThumbnail(thumbPath string) {
 }
 
 func DownloadFile(url, loc string) error {
-	out, err := os.Create("output.txt")
+	out, err := os.Create(loc)
 	defer out.Close()
 
 	if err != nil {
