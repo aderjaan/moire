@@ -167,25 +167,14 @@ func imageThumbnail(asset *db.Asset, sizeX, sizeY int) string {
 	thumbPath := fmt.Sprintf("/tmp/%v_thumb.png", assetId)
 	cleanupThumbnail(thumbPath)
 
-	scale := fmt.Sprintf(`scale='if(gt(a,4/3),%v,-1)':'if(gt(a,4/3),-1,%v)'`, sizeX, sizeY)
+	scale := fmt.Sprintf(`%vx%v`, sizeX, sizeY)
 
-	var loc string
-
-	if asset.FileType == ImageFile {
-		loc = path.Join("/", "tmp", assetId+"_"+randSeq(10))
-		err := DownloadFile(signedUrl, loc)
-		//defer cleanupThumbnail(loc)
-
-		if err != nil {
-			panic(err)
-		}
-
-	} else {
-		loc = signedUrl
+	if err := DownloadFile(signedUrl, thumbPath); err != nil {
+		panic(err)
 	}
 
 	imageThumber := exec.Command(
-		config.Settings.Moire.FFmpeg, "-i", loc, "-vf", scale, thumbPath,
+		"mogrify", "-resize "+scale, "-gravity center", "-extent "+scale, "-format png", "-quality 75", thumbPath,
 	)
 
 	execCommand(imageThumber)
