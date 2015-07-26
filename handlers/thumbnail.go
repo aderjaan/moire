@@ -137,6 +137,28 @@ func optimizeThumbnail(thumbPath string) {
 	executeRaw(optCmd)
 }
 
+func DownloadFile(url, loc string) error {
+	out, err := os.Create("output.txt")
+	defer out.Close()
+
+	if err != nil {
+		return err
+	}
+
+	resp, err := http.Get("http://example.com/")
+	defer resp.Body.Close()
+
+	if err != nil {
+		return err
+	}
+
+	if _, err := io.Copy(out, resp.Body); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func imageThumbnail(asset *db.Asset, sizeX, sizeY int) string {
 
 	assetId := asset.Id.Hex()
@@ -147,8 +169,18 @@ func imageThumbnail(asset *db.Asset, sizeX, sizeY int) string {
 
 	scale := fmt.Sprintf(`scale='if(gt(a,4/3),%v,-1)':'if(gt(a,4/3),-1,%v)'`, sizeX, sizeY)
 
+	var loc string
+
+	if asset.FileType == ImageFile {
+		loc = path.Join("/", "tmp", assetId+"_"+randSeq(10))
+		DownloadFile(signedUrl, loc)
+		defer cleanupThumbnail(loc)
+	} else {
+		loc = signedUrl
+	}
+
 	imageThumber := exec.Command(
-		config.Settings.Moire.FFmpeg, "-i", signedUrl, "-vf", scale, thumbPath,
+		config.Settings.Moire.FFmpeg, "-i", loc, "-vf", scale, thumbPath,
 	)
 
 	execCommand(imageThumber)
