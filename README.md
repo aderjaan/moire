@@ -94,7 +94,7 @@ Create an Amazon SNS Topic (to be triggered). In this example, `moire-gallery-up
 
 ```
 
-Configure your S3 bucket (select bucket > properties > events) and select ObjectCreated(all) with the SNS topic name. After uploading your next file, a message will be in your SNS Topic. You can easily test that to create an email subscription in the SNS topic.
+Configure your S3 bucket (select bucket > properties > events) and select ObjectCreated(all) with the SNS topic name. After uploading your next file, a message will be in your SNS Topic. You can easily test that to create an email subscription in the SNS topic. For more information about this, see the [AWS documentation(http://docs.aws.amazon.com/AmazonS3/latest/UG/SettingBucketNotifications.html)].
 
 Now it's time to configure the web hook. As you are probably behind a firewall and/or using NAT, your local moire instance wont be accessible publicly. To work around that, you can use a tunnel service like [ngrok(https://ngrok.com)], then run `ngrok http localhost:8811`. Add a HTTPS webhook to the following endpoint: `https://host/notify/sns`
 
