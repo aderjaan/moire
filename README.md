@@ -77,6 +77,10 @@ After uploading the file to S3, moire relies on a web hook to be called in order
 Create an Amazon SNS Topic (to be triggered). In this example, `moire-gallery-upload` is used as the topic name. Change your topic policy to allow the Amazon S3 bucket to publish:
 
 ```
+{
+  "Version": "2008-10-17",
+  "Id": "__default_policy_ID",
+  "Statement": [
     {
       "Sid": "__default_statement_ID",
       "Effect": "Allow",
@@ -91,7 +95,8 @@ Create an Amazon SNS Topic (to be triggered). In this example, `moire-gallery-up
         }
       }
     }
-
+  ]
+}
 ```
 
 Configure your S3 bucket (select bucket > properties > events) and select ObjectCreated(all) with the SNS topic name. After uploading your next file, a message will be in your SNS Topic. You can easily test that to create an email subscription in the SNS topic. For more information about this, see the [AWS documentation(http://docs.aws.amazon.com/AmazonS3/latest/UG/SettingBucketNotifications.html)].
