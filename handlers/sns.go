@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -9,6 +10,8 @@ import (
 	"gopkg.in/simversity/gottp.v3"
 	"gopkg.in/simversity/gottp.v3/utils"
 )
+
+const SNS_SUBSCRIPTIONCONFIRMATION_TYPE = "SubscriptionConfirmation"
 
 type SNS struct {
 	gottp.BaseHandler
@@ -26,11 +29,20 @@ func parseMessage(n snsNotice) (msg snsMessage, errs *[]error) {
 	return
 }
 
+func breakOnSubscriptionConfirmation(n snsNotice) {
+	if n.Type == SNS_SUBSCRIPTIONCONFIRMATION_TYPE {
+		msg := fmt.Sprintf("Subscription Confirmation Request, your SubscribeURL: %s", n.SubscribeURL)
+		panic(msg)
+	}
+}
+
 func (self *SNS) Post(request *gottp.Request) {
 	var errs *[]error
 
 	n := snsNotice{}
 	request.ConvertArguments(&n)
+
+	breakOnSubscriptionConfirmation(n)
 
 	msg, errs := parseMessage(n)
 	if len(*errs) > 0 {
@@ -120,11 +132,12 @@ type snsMessage struct {
 }
 
 type snsNotice struct {
-	Type      string `json:"Type"`
-	MessageId string `json:"MessageId" required:"true"`
-	TopicArn  string `json:"TopicArn"`
-	Subject   string `json:"Subject"`
-	Message   string `json:"Message" required:"true"`
-	Timestamp string `json:"Timestamp"`
-	Signature string `json:"Signature" required:"true"`
+	Type         string `json:"Type"`
+	MessageId    string `json:"MessageId" required:"true"`
+	TopicArn     string `json:"TopicArn"`
+	Subject      string `json:"Subject"`
+	Message      string `json:"Message" required:"true"`
+	Timestamp    string `json:"Timestamp"`
+	Signature    string `json:"Signature" required:"true"`
+	SubscribeURL string `json:"SubscribeURL"`
 }
