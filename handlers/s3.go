@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -121,7 +122,11 @@ func makeUploadURL(assetId, collection, filename, prefix string) string {
 }
 
 func getThumbnailUploadURL(assetId, collection, fileName string) string {
-	return makeUploadURL(assetId, collection, fileName, "thumbnail")
+	// Create a filename for the thumbnail, with PNG extension
+	thumbName := strings.TrimSuffix(fileName, filepath.Ext(fileName))
+	thumbFileName := fmt.Sprintf("%s.%s", thumbName, "png")
+
+	return makeUploadURL(assetId, collection, thumbFileName, "thumbnail")
 }
 
 func getUploadURL(assetId, collection, fileName string) string {
