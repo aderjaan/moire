@@ -6,7 +6,9 @@ Media server to save and serve assets
 * Amazon AWS access (S3 and SNS)
 * MongoDB
 * Go
-* ImageMagick, optipng, ffmeg
+* ImageMagick, optipng, ffmeg 
+
+On Mac OS, packages are available on homebrew, just run `brew install mongodb go imagemagick optipng ffmpeg`
 
 ## Setup
 see the [go documentation](http://golang.org/doc/code.html) to setup a proper coding structure
