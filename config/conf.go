@@ -36,6 +36,7 @@ func (self *config) MakeConfig(configPath string) {
 	self.Moire.ImageTimeout = 30
 	self.Moire.StaticPath = "https://d3iyv3qavi6f2s.cloudfront.net/statics"
 
+	self.Moire.Tokens = make(map[string]string)
 	self.Moire.Tokens[DefaultPublicKey] = DefaultPrivateKey
 
 	self.S3.Region = "eu-west-1"
@@ -50,4 +51,4 @@ func (self *config) GetGottpConfig() *conf.GottpSettings {
 	return &self.Gottp
 }
 
-var Settings config
+var Settings = config{}

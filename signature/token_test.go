@@ -1,12 +1,18 @@
 package signature
 
 import (
+	"github.com/bulletind/moire/config"
+	"gopkg.in/simversity/gottp.v3"
 	"testing"
 	"testing/quick"
 )
 
-func seed_token(public_key, private_key string) {
-	TOKEN_MAP[public_key] = private_key
+func seed_token(publicKey, privateKey string) {
+	config.Settings.Moire.Tokens[publicKey] = privateKey
+}
+
+func init() {
+	gottp.MakeConfig(&config.Settings)
 }
 
 func TestGetPrivateKey(t *testing.T) {
@@ -21,7 +27,7 @@ func TestGetPrivateKey(t *testing.T) {
 
 func TestDefaultPrivateKey(t *testing.T) {
 	key := GetSecretKey("hello")
-	if key != defaultPrivateKey {
+	if key != config.DefaultPrivateKey {
 		t.Error("Key must match the default Secret key")
 	}
 }
