@@ -33,7 +33,7 @@ func (self *config) MakeConfig(configPath string) {
 	self.Gottp.Listen = "127.0.0.1:8811"
 	self.Moire.DBAddress = "127.0.0.1:27017"
 	self.Moire.DBName = "gallery"
-	self.Moire.Debug = true
+	self.Moire.Debug = false
 	self.Moire.FFmpeg = "ffmpeg"
 	self.Moire.SignRequests = false
 	self.Moire.ImageTimeout = 30
