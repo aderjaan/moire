@@ -54,4 +54,4 @@ func (self *config) GetGottpConfig() *conf.GottpSettings {
 	return &self.Gottp
 }
 
-var Settings = config{}
+var Settings config
