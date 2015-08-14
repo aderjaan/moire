@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log"
+	log "github.com/Sirupsen/logrus"
 
 	"runtime"
 
@@ -17,7 +17,7 @@ func sysInit() {
 
 func main() {
 	cores := runtime.NumCPU()
-	log.Println("Setting no. of Cores as", cores)
+	log.Infoln("Setting no. of Cores as", cores)
 	runtime.GOMAXPROCS(cores)
 
 	go sysInit()
