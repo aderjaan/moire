@@ -1,13 +1,19 @@
 package signature
 
-var TOKEN_MAP = map[string]string{}
+import (
+	"github.com/bulletind/moire/config"
+)
 
-const defaultPrivateKey = "==GottpMoireToken=="
+func GetSecretKey(publicKey string) string {
+	// TO DO: replace gcfg setting file with a format, e.g. YAML, that does support maps, so we can do simply this:
+	// tokenMap := config.Settings.Moire.Tokens
 
-func GetSecretKey(public_key string) string {
-	secret, ok := TOKEN_MAP[public_key]
+	tokenMap := make(map[string]string)
+	tokenMap[config.Settings.Moire.PublicKey] = config.Settings.Moire.PrivateKey
+
+	secret, ok := tokenMap[publicKey]
 	if !ok {
-		return defaultPrivateKey
+		return config.DefaultPrivateKey
 	}
 
 	return secret

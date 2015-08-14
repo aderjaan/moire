@@ -5,7 +5,7 @@ import (
 	"crypto/sha512"
 	"encoding/base64"
 	"errors"
-	"log"
+	log "github.com/Sirupsen/logrus"
 	"net/url"
 	"strings"
 	"time"
@@ -26,17 +26,21 @@ func isTimestampValid(signed_on string) error {
 	max_time_skew := current_time.Add(5 * time.Minute)
 	max_time_offset := current_time.Add(-60 * time.Minute)
 
-	log.Println("Current:", current_time)
-	log.Println("Timestamp:", timestamp)
-	log.Println("Skew", max_time_skew)
-	log.Println("Offset", max_time_offset)
+	log.Debug("Current:", current_time)
+	log.Debug("Timestamp:", timestamp)
+	log.Debug("Skew", max_time_skew)
+	log.Debug("Offset", max_time_offset)
 
 	if timestamp.Sub(max_time_skew) > 0 {
-		return errors.New("Timestamp max skew validation error")
+		err := "Timestamp max skew validation error"
+		log.Warn(err)
+		return errors.New(err)
 	}
 
 	if timestamp.Sub(max_time_offset) < 0 {
-		return errors.New("Timestamp max offset validation error")
+		err := "Timestamp max offset validation error"
+		log.Warn(err)
+		return errors.New(err)
 	}
 
 	return nil
@@ -86,18 +90,18 @@ func MakeSignature(public_key, secret_key, timestamp, path string) string {
 
 	//Construct Canonical Query
 	query := canonicalQuery(public_key, timestamp)
-	log.Println("CanonicalQuery:", query)
+	log.Debug("CanonicalQuery:", query)
 
 	//Construct Path
-	log.Println("CanonicalPath:", path)
+	log.Debug("CanonicalPath:", path)
 
 	//Sign the strings, by joining \n
 	signed_string := stringToSign(path, query)
-	log.Println("SignedString:", signed_string)
+	log.Debug("SignedString:", signed_string)
 
 	//Create Sha512 HMAC string
 	hmac_string := makeHmac512(signed_string, secret_key)
-	log.Println("Hmac string:", hmac_string)
+	log.Debug("Hmac string:", hmac_string)
 
 	//Encode the resultant to base64
 	base64_string := makeBase64(hmac_string)
@@ -116,12 +120,13 @@ func IsRequestValid(
 
 	computed_signature := MakeSignature(public_key, private_key, timestamp, path)
 
-	log.Println("PublicKey:", public_key)
-	log.Println("PrivateKey:", private_key)
-	log.Println("Computed: => ", computed_signature)
+	log.Debug("PublicKey:", public_key)
+	log.Debug("PrivateKey:", private_key)
+	log.Debug("Computed: => ", computed_signature)
 
 	if signature != computed_signature {
-		log.Println("Passed: => ", signature)
+		log.Debug("Passed: => ", signature)
+		log.Warn("Signature mismatch occured")
 		return errors.New("Invalid signature")
 	}
 
