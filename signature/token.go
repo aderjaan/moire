@@ -1,13 +1,14 @@
 package signature
 
-var TOKEN_MAP = map[string]string{}
+import (
+	"github.com/bulletind/moire/config"
+)
 
-const defaultPrivateKey = "==GottpMoireToken=="
-
-func GetSecretKey(public_key string) string {
-	secret, ok := TOKEN_MAP[public_key]
+func GetSecretKey(publicKey string) string {
+	tokenMap := config.Settings.Moire.Tokens
+	secret, ok := tokenMap[publicKey]
 	if !ok {
-		return defaultPrivateKey
+		return config.DefaultPrivateKey
 	}
 
 	return secret
