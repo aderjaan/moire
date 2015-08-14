@@ -7,8 +7,9 @@ import (
 	"testing/quick"
 )
 
-func seed_token(publicKey, privateKey string) {
-	config.Settings.Moire.Tokens[publicKey] = privateKey
+func seed_token(publicKey string, privateKey string) {
+	config.Settings.Moire.PublicKey = publicKey
+	config.Settings.Moire.PrivateKey = privateKey
 }
 
 func init() {

@@ -23,7 +23,8 @@ type config struct {
 		SignRequests         bool
 		ImageTimeout         int
 		StaticPath           string
-		Tokens               map[string]string
+		PublicKey            string
+		PrivateKey           string
 	}
 }
 
@@ -36,8 +37,8 @@ func (self *config) MakeConfig(configPath string) {
 	self.Moire.ImageTimeout = 30
 	self.Moire.StaticPath = "https://d3iyv3qavi6f2s.cloudfront.net/statics"
 
-	self.Moire.Tokens = make(map[string]string)
-	self.Moire.Tokens[DefaultPublicKey] = DefaultPrivateKey
+	self.Moire.PublicKey = DefaultPublicKey
+	self.Moire.PrivateKey = DefaultPrivateKey
 
 	self.S3.Region = "eu-west-1"
 	self.S3.Bucket = "moire-gallery"
