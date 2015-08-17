@@ -36,7 +36,7 @@ func (self *config) MakeConfig(configPath string) {
 	self.Moire.Debug = false
 	self.Moire.FFmpeg = "ffmpeg"
 	self.Moire.SignRequests = false
-	self.Moire.ImageTimeout = 30
+	self.Moire.ImageTimeout = 15
 	self.Moire.StaticPath = "https://d3iyv3qavi6f2s.cloudfront.net/statics"
 
 	self.Moire.PublicKey = DefaultPublicKey
