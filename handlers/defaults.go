@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"github.com/bulletind/moire/config"
-	"path"
 )
 
 const (
@@ -18,13 +17,13 @@ const UploadPrefix = "original_file"
 func thumbnailUrls(fileType string) string {
 	switch fileType {
 	case AudioFile:
-		return path.Join(config.Settings.Moire.StaticPath, "/placeholders/audio.png")
+		return config.Settings.Moire.StaticPath + "/placeholders/audio.png"
 	case VideoFile:
-		return path.Join(config.Settings.Moire.StaticPath, "/placeholders/video.png")
+		return config.Settings.Moire.StaticPath + "/placeholders/video.png"
 	case ImageFile:
-		return path.Join(config.Settings.Moire.StaticPath, "/placeholders/thumbnail.png")
+		return config.Settings.Moire.StaticPath + "/placeholders/thumbnail.png"
 	default:
-		return path.Join(config.Settings.Moire.StaticPath, "/placeholders/attachment.png")
+		return config.Settings.Moire.StaticPath + "/placeholders/attachment.png"
 	}
 }
 
