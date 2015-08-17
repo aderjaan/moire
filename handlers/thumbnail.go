@@ -261,12 +261,15 @@ func (self *Thumbnail) Get(request *gottp.Request) {
 
 			return
 		}
+		// although temporary redirects should not be cached, some clients behave otherwise
+		request.Writer.Header().Set("Cache-Control", "max-age=0, no-cache, no-store")
+		request.Writer.Header().Set("Pragma", "no-cache")
 
-		// If err is nil, implies that thumbnail was successfully located.
 		request.Redirect(thumbUrl, TemporaryRedirect)
 		return
 	}
 
+	// If err is nil, implies that thumbnail was successfully located.
 	if args.Time+args.X+args.Y != "" {
 		time, _ := strconv.Atoi(args.Time)
 		if time == 0 {
