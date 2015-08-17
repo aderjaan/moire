@@ -231,8 +231,15 @@ func (self *Thumbnail) Get(request *gottp.Request) {
 		return
 	}
 
+	valid := ValidateSignature(request)
+	if valid == false {
+		return
+	}
+
 	conn := getConn()
 	asset := getAsset(conn, _id)
+
+	request.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 
 	if asset.Status != db.READY && asset.FileType == ImageFile {
 		pollUntilReady(conn, _id)
@@ -241,11 +248,6 @@ func (self *Thumbnail) Get(request *gottp.Request) {
 
 	args := thumbArgs{}
 	request.ConvertArguments(&args)
-
-	valid := ValidateSignature(request)
-	if valid == false {
-		return
-	}
 
 	_, no_redirect := request.GetArgument("no_redirect").(string)
 

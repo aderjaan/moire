@@ -1,7 +1,8 @@
 package handlers
 
 import (
-	"fmt"
+	log "github.com/Sirupsen/logrus"
+
 	"strings"
 	"time"
 
@@ -45,7 +46,7 @@ func pollUntilReady(conn *db.MConn, _id string) {
 		select {
 		// Got a timeout! fail with a timeout error
 		case <-timeout:
-			fmt.Println("Timed Out")
+			log.Debugln("Polling timed out")
 			return
 			// Got a tick, we should check on doSomething()
 		case <-tick:
