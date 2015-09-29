@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	log "github.com/Sirupsen/logrus"
 	"net/http"
 	"net/url"
 	"strings"
@@ -45,6 +46,12 @@ func (self *SNS) Post(request *gottp.Request) {
 	breakOnSubscriptionConfirmation(n)
 
 	msg, errs := parseMessage(n)
+
+	log.WithFields(log.Fields{
+		"snsNotice":     n,
+		"parsedMessage": msg,
+	}).Debug("Received SNS Notification")
+
 	if len(*errs) > 0 {
 		request.Raise(gottp.HttpError{
 			http.StatusBadRequest,
