@@ -72,8 +72,8 @@ func uploadFile(bucket, uploadUrl, filePath string) {
 
 	b := getBucket(bucket)
 
-	log.Println("Uploaading:", uploadUrl)
-	b.Put(uploadUrl, data, fileType, s3.PublicRead, s3.Options{})
+	log.Println("Uploading:", uploadUrl)
+	b.Put(uploadUrl, data, fileType, s3.Private, s3.Options{})
 }
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
