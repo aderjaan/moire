@@ -89,7 +89,7 @@ func randSeq(n int) string {
 }
 
 func getSignedUploadURL(bucket, path, mimetype string) string {
-	expiry := time.Hour * 24 * 365
+	expiry := time.Hour * 24 * 5
 	b := getBucket(bucket)
 	url := b.UploadSignedURL(path, "PUT", mimetype, time.Now().Add(expiry))
 	return url
