@@ -1,5 +1,5 @@
 # moire
-Media server to save and serve assets
+Media server to save and serve assets [![Build Status](https://travis-ci.org/bulletind/moire.svg?branch=develop)](https://travis-ci.org/bulletind/moire)
 
 ## Prerequisites
 
