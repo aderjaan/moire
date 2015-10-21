@@ -262,8 +262,8 @@ func (self *Thumbnail) Get(request *gottp.Request) {
 			return
 		}
 		// although temporary redirects should not be cached, some clients behave otherwise
-		request.Writer.Header().Set("Cache-Control", "max-age=0, no-cache, no-store")
-		request.Writer.Header().Set("Pragma", "no-cache")
+		// request.Writer.Header().Set("Cache-Control", "max-age=0, no-cache, no-store")
+		// request.Writer.Header().Set("Pragma", "no-cache")
 
 		request.Redirect(thumbUrl, TemporaryRedirect)
 		return
