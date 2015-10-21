@@ -1,6 +1,9 @@
 {
 	"ImportPath": "github.com/bulletind/moire",
 	"GoVersion": "go1.5.1",
+	"Packages": [
+		"./..."
+	],
 	"Deps": [
 		{
 			"ImportPath": "code.google.com/p/gcfg",
@@ -17,8 +20,43 @@
 			"Rev": "9f84ec7789688d31da923eef4c2fd1e040eecf0a"
 		},
 		{
+			"ImportPath": "github.com/bugsnag/bugsnag-go",
+			"Comment": "v1.0.5-2-g72ff9e1",
+			"Rev": "72ff9e15e8c5ae52e8db1dd5dd1f77a9f2f1a895"
+		},
+		{
+			"ImportPath": "github.com/bugsnag/osext",
+			"Rev": "0dd3f918b21bec95ace9dc86c7e70266cfc5c702"
+		},
+		{
+			"ImportPath": "github.com/bugsnag/panicwrap",
+			"Rev": "e5f9854865b9778a45169fc249e99e338d4d6f27"
+		},
+		{
 			"ImportPath": "github.com/getsentry/raven-go",
 			"Rev": "74c334d7b8aaa4fd1b4fc6aa428c36fed1699e28"
+		},
+		{
+			"ImportPath": "github.com/kr/pretty",
+			"Comment": "go.weekly.2011-12-22-27-ge6ac2fc",
+			"Rev": "e6ac2fc51e89a3249e82157fa0bb7a18ef9dd5bb"
+		},
+		{
+			"ImportPath": "github.com/kr/text",
+			"Rev": "e373e137fafd8abd480af49182dea0513914adb4"
+		},
+		{
+			"ImportPath": "github.com/stretchr/testify/assert",
+			"Comment": "v1.0-51-gf3960ab",
+			"Rev": "f3960ab1f9664ecc4e27c78af27cc9063d745a43"
+		},
+		{
+			"ImportPath": "github.com/stvp/go-udp-testing",
+			"Rev": "abcd331ec306600e2c71d73841152e78cce727f5"
+		},
+		{
+			"ImportPath": "github.com/tobi/airbrake-go",
+			"Rev": "a3cdd910a3ffef88a20fbecc10363a520ad61a0a"
 		},
 		{
 			"ImportPath": "gopkg.in/bulletind/goamz.v1/aws",
@@ -29,6 +67,15 @@
 			"ImportPath": "gopkg.in/bulletind/goamz.v1/s3",
 			"Comment": "v1.1",
 			"Rev": "af11ac85c118ce4e0e246f597626cc181ac218b6"
+		},
+		{
+			"ImportPath": "gopkg.in/bulletind/goamz.v1/testutil",
+			"Comment": "v1.1",
+			"Rev": "af11ac85c118ce4e0e246f597626cc181ac218b6"
+		},
+		{
+			"ImportPath": "gopkg.in/check.v1",
+			"Rev": "11d3bc7aa68e238947792f30573146a3231fc0f1"
 		},
 		{
 			"ImportPath": "gopkg.in/mgo.v2",
@@ -44,6 +91,10 @@
 			"ImportPath": "gopkg.in/simversity/gottp.v3",
 			"Comment": "v3.3",
 			"Rev": "b8c6bc147875efde7569cae23ebdd05776cbccaf"
+		},
+		{
+			"ImportPath": "gopkg.in/tomb.v2",
+			"Rev": "14b3d72120e8d10ea6e6b7f87f7175734b1faab8"
 		}
 	]
 }
