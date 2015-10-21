@@ -1,0 +1,49 @@
+{
+	"ImportPath": "github.com/bulletind/moire",
+	"GoVersion": "go1.5.1",
+	"Deps": [
+		{
+			"ImportPath": "code.google.com/p/gcfg",
+			"Rev": "c2d3050044d05357eaf6c3547249ba57c5e235cb"
+		},
+		{
+			"ImportPath": "github.com/Sirupsen/logrus",
+			"Comment": "v0.8.6-7-g9c060de",
+			"Rev": "9c060de643590dae45da9d7c26276463bfc46fa0"
+		},
+		{
+			"ImportPath": "github.com/ajstarks/svgo",
+			"Comment": "go.weekly.2012-01-27-109-g9f84ec7",
+			"Rev": "9f84ec7789688d31da923eef4c2fd1e040eecf0a"
+		},
+		{
+			"ImportPath": "github.com/getsentry/raven-go",
+			"Rev": "74c334d7b8aaa4fd1b4fc6aa428c36fed1699e28"
+		},
+		{
+			"ImportPath": "gopkg.in/bulletind/goamz.v1/aws",
+			"Comment": "v1.1",
+			"Rev": "af11ac85c118ce4e0e246f597626cc181ac218b6"
+		},
+		{
+			"ImportPath": "gopkg.in/bulletind/goamz.v1/s3",
+			"Comment": "v1.1",
+			"Rev": "af11ac85c118ce4e0e246f597626cc181ac218b6"
+		},
+		{
+			"ImportPath": "gopkg.in/mgo.v2",
+			"Comment": "r2015.06.03-3-g3569c88",
+			"Rev": "3569c88678d88179dcbd68d02ab081cbca3cd4d0"
+		},
+		{
+			"ImportPath": "gopkg.in/simversity/gotracer.v1",
+			"Comment": "v1.3",
+			"Rev": "aaa896c292386ffcb6893e5afa1224381da0f0d3"
+		},
+		{
+			"ImportPath": "gopkg.in/simversity/gottp.v3",
+			"Comment": "v3.3",
+			"Rev": "b8c6bc147875efde7569cae23ebdd05776cbccaf"
+		}
+	]
+}

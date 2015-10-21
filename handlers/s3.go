@@ -3,9 +3,9 @@ package handlers
 import (
 	"errors"
 	"fmt"
+	log "github.com/Sirupsen/logrus"
 	"io"
 	"io/ioutil"
-	"log"
 	"math/rand"
 	"mime"
 	"path"
@@ -72,8 +72,8 @@ func uploadFile(bucket, uploadUrl, filePath string) {
 
 	b := getBucket(bucket)
 
-	log.Println("Uploaading:", uploadUrl)
-	b.Put(uploadUrl, data, fileType, s3.PublicRead, s3.Options{})
+	log.Println("Uploading:", uploadUrl)
+	b.Put(uploadUrl, data, fileType, s3.Private, s3.Options{})
 }
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -89,9 +89,17 @@ func randSeq(n int) string {
 }
 
 func getSignedUploadURL(bucket, path, mimetype string) string {
-	expiry := time.Hour * 24 * 365
+	expiryDuration := time.Duration(int64(time.Minute) * config.Settings.Moire.UploadUrlExpiry)
+	expiryDate := time.Now().Add(expiryDuration)
+
+	log.WithFields(log.Fields{
+		"path":       path,
+		"expiryDate": expiryDate,
+	}).Debugln("creating upload url")
+
 	b := getBucket(bucket)
-	url := b.UploadSignedURL(path, "PUT", mimetype, time.Now().Add(expiry))
+	url := b.UploadSignedURL(path, "PUT", mimetype, expiryDate)
+
 	return url
 }
 

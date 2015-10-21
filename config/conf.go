@@ -26,6 +26,7 @@ type config struct {
 		PublicKey            string
 		PrivateKey           string
 		SentryDSN            string
+		UploadUrlExpiry      int64
 	}
 }
 
@@ -41,6 +42,7 @@ func (self *config) MakeConfig(configPath string) {
 
 	self.Moire.PublicKey = DefaultPublicKey
 	self.Moire.PrivateKey = DefaultPrivateKey
+	self.Moire.UploadUrlExpiry = 7200 // 5 days (60 * 24 * 5)
 
 	self.S3.Region = "eu-west-1"
 	self.S3.Bucket = "moire-gallery"
