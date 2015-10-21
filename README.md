@@ -17,9 +17,15 @@ see the [go documentation](http://golang.org/doc/code.html) to setup a proper co
 mkdir $HOME/go
 export GOPATH=$HOME/go
 export PATH=$PATH:$GOPATH/bin
+export GO15VENDOREXPERIMENT="1"
 cd $GOPATH
 go get github.com/bulletind/moire
 ```
+
+homebrew users may need `export GOROOT="/usr/local/opt/go/libexec"` 
+
+Note about packaging: 
+Moire contains all dependencies in the vendor folder. The vendor folder is maintained using `godep`. Vendor packages are committed in the repo itself: this way, we can have reproducible builds which continue to work even if the source repository is not available anymore.
 
 ## Install and run
 
