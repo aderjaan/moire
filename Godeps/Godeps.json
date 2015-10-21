@@ -1,6 +1,9 @@
 {
 	"ImportPath": "github.com/bulletind/moire",
 	"GoVersion": "go1.5.1",
+	"Packages": [
+		"./..."
+	],
 	"Deps": [
 		{
 			"ImportPath": "code.google.com/p/gcfg",
@@ -8,17 +11,30 @@
 		},
 		{
 			"ImportPath": "github.com/Sirupsen/logrus",
-			"Comment": "v0.8.6-7-g9c060de",
-			"Rev": "9c060de643590dae45da9d7c26276463bfc46fa0"
+			"Comment": "v0.8.7",
+			"Rev": "418b41d23a1bf978c06faea5313ba194650ac088"
 		},
 		{
 			"ImportPath": "github.com/ajstarks/svgo",
-			"Comment": "go.weekly.2012-01-27-109-g9f84ec7",
-			"Rev": "9f84ec7789688d31da923eef4c2fd1e040eecf0a"
+			"Comment": "go.weekly.2012-01-27-114-ga7778b8",
+			"Rev": "a7778b8b562eca0ba5b3d4a58e2f17e5800d93fb"
+		},
+		{
+			"ImportPath": "github.com/evalphobia/logrus_sentry",
+			"Rev": "e42a087aba29eb4dc9d68207a63d652e560aa6af"
 		},
 		{
 			"ImportPath": "github.com/getsentry/raven-go",
-			"Rev": "74c334d7b8aaa4fd1b4fc6aa428c36fed1699e28"
+			"Rev": "97c72035b621c19143a3485ff9cd2e588ddeb376"
+		},
+		{
+			"ImportPath": "github.com/kr/pretty",
+			"Comment": "go.weekly.2011-12-22-27-ge6ac2fc",
+			"Rev": "e6ac2fc51e89a3249e82157fa0bb7a18ef9dd5bb"
+		},
+		{
+			"ImportPath": "github.com/kr/text",
+			"Rev": "bb797dc4fb8320488f47bf11de07a733d7233e1f"
 		},
 		{
 			"ImportPath": "gopkg.in/bulletind/goamz.v1/aws",
@@ -32,8 +48,8 @@
 		},
 		{
 			"ImportPath": "gopkg.in/mgo.v2",
-			"Comment": "r2015.06.03-3-g3569c88",
-			"Rev": "3569c88678d88179dcbd68d02ab081cbca3cd4d0"
+			"Comment": "r2015.10.05",
+			"Rev": "f402e3a216db333ae6b3ba68b9152a34a0bc6984"
 		},
 		{
 			"ImportPath": "gopkg.in/simversity/gotracer.v1",
