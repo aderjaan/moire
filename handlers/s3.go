@@ -108,16 +108,17 @@ func getS3Reader(bucket, path string) (io.ReadCloser, error) {
 	return b.GetReader(path)
 }
 
-func getSignedURL(bucket, path string) string {
+func getSignedURL(bucket, path string) (string, time.Time) {
 	if strings.HasPrefix(path, "http") {
-		return path
+		return path, time.Now()
 	}
 
 	expiryDuration := time.Duration(int64(time.Minute) * config.Settings.Moire.GetUrlExpiry)
 	expiryDate := time.Now().Add(expiryDuration)
 
 	b := getBucket(bucket)
-	return b.SignedURL(path, expiryDate)
+	url := b.SignedURL(path, expiryDate)
+	return url, expiryDate
 }
 
 func makeUploadURL(assetId, collection, filename, prefix string) string {
@@ -163,7 +164,7 @@ func getThumbnailURL(asset *db.Asset) (url string, err error) {
 func getURL(asset *db.Asset) (url string, err error) {
 	switch asset.Status {
 	case db.READY:
-		url = getSignedURL(asset.Bucket, asset.Path)
+		url, _ = getSignedURL(asset.Bucket, asset.Path)
 		break
 	case db.LOST:
 		err = errors.New(contentUnavailable)

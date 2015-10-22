@@ -11,6 +11,7 @@ import (
 	"math/big"
 	"net/http"
 	"path"
+	"time"
 
 	"github.com/bulletind/moire/config"
 	"github.com/bulletind/moire/db"
@@ -74,7 +75,7 @@ func videoThumbnail(asset *db.Asset, duration, sizeX, sizeY int) string {
 		minute = minute % 60
 	}
 
-	signedUrl := getSignedURL(asset.Bucket, asset.Path)
+	signedUrl, _ := getSignedURL(asset.Bucket, asset.Path)
 	thumbPath := fmt.Sprintf("/tmp/%v_thumb.png", assetId)
 
 	cleanupThumbnail(thumbPath)
@@ -163,7 +164,7 @@ func imageThumbnail(asset *db.Asset, sizeX, sizeY int) string {
 
 	assetId := asset.Id.Hex()
 
-	signedUrl := getSignedURL(asset.Bucket, asset.Path)
+	signedUrl, _ := getSignedURL(asset.Bucket, asset.Path)
 	thumbPath := fmt.Sprintf("/tmp/%v_thumb.png", assetId)
 	cleanupThumbnail(thumbPath)
 
@@ -319,9 +320,8 @@ func (self *Thumbnail) Get(request *gottp.Request) {
 		}
 	}
 
-	signed_url := getSignedURL(asset.Bucket, thumbUrl)
-	expiry_string := strconv.FormatInt(config.Settings.Moire.RedirectUrlCacheExpiry*int64(60), 10)
-	request.Writer.Header().Set("Cache-Control", "private, max-age="+expiry_string)
+	signed_url, expiryDate := getSignedURL(asset.Bucket, thumbUrl)
+	request.Writer.Header().Set("Expires", expiryDate.Format(time.RFC1123))
 	request.Redirect(signed_url, TemporaryRedirect)
 	return
 }
