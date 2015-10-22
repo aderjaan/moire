@@ -113,8 +113,11 @@ func getSignedURL(bucket, path string) string {
 		return path
 	}
 
+	expiryDuration := time.Duration(int64(time.Minute) * config.Settings.Moire.GetUrlExpiry)
+	expiryDate := time.Now().Add(expiryDuration)
+
 	b := getBucket(bucket)
-	return b.SignedURL(path, time.Now().Add(time.Hour))
+	return b.SignedURL(path, expiryDate)
 }
 
 func makeUploadURL(assetId, collection, filename, prefix string) string {

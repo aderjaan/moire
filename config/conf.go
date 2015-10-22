@@ -13,20 +13,22 @@ type config struct {
 		Region    string
 	}
 	Moire struct {
-		DBName               string
-		DBAddress            string
-		TranslationDirectory string
-		Debug                bool
-		DBUsername           string
-		DBPassword           string
-		FFmpeg               string
-		SignRequests         bool
-		ImageTimeout         int
-		StaticPath           string
-		PublicKey            string
-		PrivateKey           string
-		SentryDSN            string
-		UploadUrlExpiry      int64
+		DBName                 string
+		DBAddress              string
+		TranslationDirectory   string
+		Debug                  bool
+		DBUsername             string
+		DBPassword             string
+		FFmpeg                 string
+		SignRequests           bool
+		ImageTimeout           int
+		StaticPath             string
+		PublicKey              string
+		PrivateKey             string
+		SentryDSN              string
+		UploadUrlExpiry        int64
+		GetUrlExpiry           int64
+		RedirectUrlCacheExpiry int64
 	}
 }
 
@@ -42,7 +44,9 @@ func (self *config) MakeConfig(configPath string) {
 
 	self.Moire.PublicKey = DefaultPublicKey
 	self.Moire.PrivateKey = DefaultPrivateKey
-	self.Moire.UploadUrlExpiry = 7200 // 5 days (60 * 24 * 5)
+	self.Moire.UploadUrlExpiry = 7200      // 5 days (60 * 24 * 5)
+	self.Moire.GetUrlExpiry = 60           // 1 hour
+	self.Moire.RedirectUrlCacheExpiry = 45 // 45 minutes, must be lower than GetUrlExpiry
 
 	self.S3.Region = "eu-west-1"
 	self.S3.Bucket = "moire-gallery"

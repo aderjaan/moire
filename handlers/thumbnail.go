@@ -262,8 +262,8 @@ func (self *Thumbnail) Get(request *gottp.Request) {
 			return
 		}
 		// although temporary redirects should not be cached, some clients behave otherwise
-		// request.Writer.Header().Set("Cache-Control", "max-age=0, no-cache, no-store")
-		// request.Writer.Header().Set("Pragma", "no-cache")
+		request.Writer.Header().Set("Cache-Control", "max-age=0, no-cache, no-store")
+		request.Writer.Header().Set("Pragma", "no-cache")
 
 		request.Redirect(thumbUrl, TemporaryRedirect)
 		return
@@ -320,6 +320,8 @@ func (self *Thumbnail) Get(request *gottp.Request) {
 	}
 
 	signed_url := getSignedURL(asset.Bucket, thumbUrl)
+	expiry_string := strconv.FormatInt(config.Settings.Moire.RedirectUrlCacheExpiry*int64(60), 10)
+	request.Writer.Header().Set("Cache-Control", "private, max-age="+expiry_string)
 	request.Redirect(signed_url, TemporaryRedirect)
 	return
 }
