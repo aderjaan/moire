@@ -161,10 +161,10 @@ func getThumbnailURL(asset *db.Asset) (url string, err error) {
 	return
 }
 
-func getURL(asset *db.Asset) (url string, err error) {
+func getURL(asset *db.Asset) (url string, expiryDate time.Time, err error) {
 	switch asset.Status {
 	case db.READY:
-		url, _ = getSignedURL(asset.Bucket, asset.Path)
+		url, expiryDate = getSignedURL(asset.Bucket, asset.Path)
 		break
 	case db.LOST:
 		err = errors.New(contentUnavailable)
