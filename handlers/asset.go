@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/bulletind/moire/db"
 	"gopkg.in/simversity/gottp.v3"
@@ -39,12 +40,22 @@ func (self *Asset) Get(request *gottp.Request) {
 		asset = getAsset(conn, _id)
 	}
 
-	url, err := getURL(asset)
+	// This needs explanation and refactoring
+	url, expiryDate, err := getURL(asset)
 
-	if asset.FileType == ImageFile && no_redirect != true {
-		// If its an Image and no_redirect is not provided, error is ir-relevant.
-		// It will always return the default image anyway.
-	} else if err != nil {
+	if err != nil {
+		if asset.FileType == ImageFile && no_redirect != true {
+			// If its an Image and no_redirect is not provided, error is ir-relevant.
+			// It will always return the placeholder image anyway.
+			// we don't want the expires caching header to be set, as we expect the asset to be uploaded soon.
+			//
+			// Why we don't show a 404 for images just like with other assets or show a thumbnail for these other assets as well,
+			// remains a mistery.
+			request.Redirect(url, TemporaryRedirectCode)
+			return
+		}
+
+		// show a 404 error for other assets
 		request.Raise(gottp.HttpError{
 			http.StatusNotFound,
 			err.Error(),
@@ -53,6 +64,8 @@ func (self *Asset) Get(request *gottp.Request) {
 		return
 	}
 
+	// aws signing key expiration date and will be used to set relevant caching periods accordingly
+	request.Writer.Header().Set("Expires", expiryDate.Format(time.RFC1123))
 	request.Redirect(url, TemporaryRedirectCode)
 	return
 }
