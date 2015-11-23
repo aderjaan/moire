@@ -180,7 +180,7 @@ func TestImageThumbnailGetDefault(t *testing.T) {
 	})
 }
 
-func TestImageSNSMessage(t *testing.T) {
+func DisableTestImageSNSMessage(t *testing.T) {
 	server := server.MockDBServer()
 	defer server.Close()
 
