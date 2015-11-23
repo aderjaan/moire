@@ -47,11 +47,6 @@ func (self *SNS) Post(request *gottp.Request) {
 
 	msg, errs := parseMessage(n)
 
-	log.WithFields(log.Fields{
-		"snsNotice":     n,
-		"parsedMessage": msg,
-	}).Debug("Received SNS Notification")
-
 	if len(*errs) > 0 {
 		request.Raise(gottp.HttpError{
 			http.StatusBadRequest,
@@ -74,6 +69,8 @@ func (self *SNS) Post(request *gottp.Request) {
 	}
 
 	if !strings.Contains(key, UploadPrefix) {
+		log.Debug("Skipping SNS Notification as path is not meant to be monitored.")
+
 		request.Raise(gottp.HttpError{
 			http.StatusBadRequest,
 			"Skipping path as its not meant to be monitored.",
@@ -81,6 +78,11 @@ func (self *SNS) Post(request *gottp.Request) {
 
 		return
 	}
+
+	log.WithFields(log.Fields{
+		"snsNotice":     n,
+		"parsedMessage": msg,
+	}).Debug("Received SNS Notification")
 
 	doc := db.M{"size": record.S3.Object.Size}
 
