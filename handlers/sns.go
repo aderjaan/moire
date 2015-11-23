@@ -84,12 +84,17 @@ func (self *SNS) Post(request *gottp.Request) {
 		"parsedMessage": msg,
 	}).Debug("Received SNS Notification")
 
+
 	doc := db.M{"size": record.S3.Object.Size}
 
 	conn := getConn()
 	asset := assetReady(conn, key, record.S3.Bucket.Name, db.M{"$set": doc})
 
 	assetId := asset.Id.Hex()
+
+	// send response early to prevent SNS from retrying during processing (because of processing time > timeout 15s)
+	log.Infoln("asset " + assetId + " being processed")
+	request.Write("asset " + assetId + " being processed")
 
 	thumbnailPath := getThumbnailUploadURL(assetId, asset.Collection, asset.Name)
 
@@ -123,7 +128,7 @@ func (self *SNS) Post(request *gottp.Request) {
 		updateAsset(conn, assetId, db.M{"$set": db.M{"status": db.READY}})
 	}
 
-	request.Write("asset " + assetId + " marked as ready")
+	log.Infoln("asset " + assetId + " status ready")
 }
 
 type snsMessage struct {
