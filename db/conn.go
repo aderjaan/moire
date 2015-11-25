@@ -124,7 +124,6 @@ func (self *MConn) findAndApply(table string, query M,
 	change.ReturnNew = true
 
 	coll := db.C(table)
-	log.Println(query)
 	_, err := coll.Find(query).Apply(change, result)
 	if err != nil {
 		log.Println("Error Applying Changes", table, err)

@@ -84,17 +84,30 @@ func (self *SNS) Post(request *gottp.Request) {
 		"parsedMessage": msg,
 	}).Debug("Received SNS Notification")
 
+	// send response early to prevent SNS from retrying during processing (because of processing time > timeout 15s)
+	go processMessage(record, key)
 
-	doc := db.M{"size": record.S3.Object.Size}
+	request.Write("asset being processed")
+}
+
+func processMessage(record Record, key string) {
+	doc := db.M{
+		"size": record.S3.Object.Size,
+		"status": db.PROCESSING,
+	}
 
 	conn := getConn()
 	asset := assetReady(conn, key, record.S3.Bucket.Name, db.M{"$set": doc})
 
+	if asset == nil {
+		log.Warningln("message not in pending state, processing skipped")
+		return
+	}
+
 	assetId := asset.Id.Hex()
 
-	// send response early to prevent SNS from retrying during processing (because of processing time > timeout 15s)
 	log.Infoln("asset " + assetId + " being processed")
-	request.Write("asset " + assetId + " being processed")
+
 
 	thumbnailPath := getThumbnailUploadURL(assetId, asset.Collection, asset.Name)
 
@@ -131,18 +144,20 @@ func (self *SNS) Post(request *gottp.Request) {
 	log.Infoln("asset " + assetId + " status ready")
 }
 
+type Record struct {
+	S3 struct {
+		   Bucket struct {
+					  Name string `json:"name" required:"true"`
+				  } `json:"bucket" required:"true"`
+		   Object struct {
+					  Key  string `json:"key" required:"true"`
+					  Size int    `json:"size" required:"true"`
+				  } `json:"object" required:"true"`
+	   }
+}
+
 type snsMessage struct {
-	Records []struct {
-		S3 struct {
-			Bucket struct {
-				Name string `json:"name" required:"true"`
-			} `json:"bucket" required:"true"`
-			Object struct {
-				Key  string `json:"key" required:"true"`
-				Size int    `json:"size" required:"true"`
-			} `json:"object" required:"true"`
-		}
-	} `json:"Records" required:"true"`
+	Records []Record `json:"Records" required:"true"`
 }
 
 type snsNotice struct {

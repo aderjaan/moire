@@ -212,13 +212,13 @@ func DisableTestImageSNSMessage(t *testing.T) {
 	utils.Decoder([]byte(snsString), &req.Data)
 
 	server.Test(&req, func(msg *tests.MockResponse) {
-		exception := "This asset should be marked as ready."
-		if msg.Status != 500 {
+		exception := "This asset should be processed."
+		if msg.Status != 200 {
 			fmt.Printf("%# v", pretty.Formatter(msg))
 			t.Error(exception)
 		}
 
-		if !strings.Contains(msg.Message, "executable") {
+		if msg.Message != "" {
 			fmt.Printf("%# v", pretty.Formatter(msg))
 			t.Error("mogrify: unrecognized option")
 		}

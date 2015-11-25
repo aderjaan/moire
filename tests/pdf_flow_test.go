@@ -278,13 +278,13 @@ func TestSNSMessageNotFound(t *testing.T) {
 	utils.Decoder([]byte(snsString), &req.Data)
 
 	server.Test(&req, func(msg *tests.MockResponse) {
-		exception := "This asset should not be found."
-		if msg.Status != 500 {
+		exception := "This message should be ignored."
+		if msg.Status != 200 {
 			fmt.Printf("%# v", pretty.Formatter(msg))
 			t.Error(exception)
 		}
 
-		if !strings.Contains(msg.Message, "not found") {
+		if msg.Message != "" {
 			fmt.Printf("%# v", pretty.Formatter(msg))
 			t.Error(exception)
 		}

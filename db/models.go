@@ -3,10 +3,11 @@ package db
 import "gopkg.in/mgo.v2/bson"
 
 const (
-	ASSET   = "asset"
-	PENDING = "pending"
-	READY   = "ready"
-	LOST    = "lost"
+	ASSET      = "asset"
+	PENDING    = "pending"
+	PROCESSING = "processing"
+	READY      = "ready"
+	LOST       = "lost"
 )
 
 type Asset struct {
