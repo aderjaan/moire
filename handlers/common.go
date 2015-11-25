@@ -76,6 +76,16 @@ func assetReady(conn *db.MConn, path, bucket string, doc db.M) *db.Asset {
 		path = "/" + path
 	}
 
+	conn.GetOne(db.ASSET, db.M{
+		"path":   path,
+		"bucket": bucket,
+	}, &asset)
+
+	if asset.Status != db.PENDING {
+		log.WithField("asset", asset).Debugln("asset has an invalid state")
+		return nil
+	}
+
 	err := conn.FindAndUpdate(db.ASSET, db.M{
 		"path":   path,
 		"bucket": bucket,
