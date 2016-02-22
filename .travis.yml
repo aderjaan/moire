@@ -4,7 +4,7 @@ services:
     - mongodb
 
 go:
-    - 1.5
+    - 1.5.2
 
 env:
     global:
@@ -18,6 +18,9 @@ env:
 
 before_script:
     - curl -sL https://raw.githubusercontent.com/travis-ci/artifacts/master/install | bash
+
+install:
+    - go get -t -v $(go list ./... | grep -v /vendor/)
 
 script:
     - go test -v $(go list ./... | grep -v /vendor/)

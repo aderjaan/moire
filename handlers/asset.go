@@ -25,13 +25,15 @@ func (self *Asset) Get(request *gottp.Request) {
 		return
 	}
 
-	conn := getConn()
-	asset := getAsset(conn, _id)
-
 	valid := ValidateSignature(request)
 	if valid == false {
 		return
 	}
+
+	conn := getConn()
+	asset := getAsset(conn, _id)
+
+	request.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 
 	_, no_redirect := request.GetArgument("no_redirect").(string)
 
