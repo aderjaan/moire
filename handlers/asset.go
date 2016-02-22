@@ -33,6 +33,8 @@ func (self *Asset) Get(request *gottp.Request) {
 		return
 	}
 
+	request.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+
 	_, no_redirect := request.GetArgument("no_redirect").(string)
 
 	if asset.Status != db.READY && asset.FileType == ImageFile {
