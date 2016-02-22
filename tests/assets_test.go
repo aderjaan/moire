@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/bulletind/moire/server"
+	"github.com/bulletind/moire/config"
 	"gopkg.in/simversity/gottp.v3/tests"
 )
 
@@ -45,6 +46,7 @@ func TestCreateAssetFailAgain(t *testing.T) {
 
 func TestAssetShouldRaiseException(t *testing.T) {
 	server := server.MockDBServer()
+	config.Settings.Moire.SignRequests = false
 	defer server.Close()
 
 	req := tests.MockRequest{}
@@ -52,8 +54,9 @@ func TestAssetShouldRaiseException(t *testing.T) {
 	req.Method = "get"
 
 	server.Test(&req, func(msg *tests.MockResponse) {
+		config.Settings.Moire.SignRequests = true
 		if msg.Status != 500 {
-			t.Error("Message should raise Exception")
+			t.Errorf("Message should return 500 (Exception), but returned %v", msg.Status)
 		}
 	})
 }
