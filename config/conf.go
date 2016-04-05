@@ -2,6 +2,7 @@ package config
 
 import (
 	"gopkg.in/simversity/gottp.v3/conf"
+	"os"
 )
 
 type config struct {
@@ -13,12 +14,10 @@ type config struct {
 		Region    string
 	}
 	Moire struct {
-		DBName                 string
-		DBAddress              string
+		DbUrl		       string
+		DbName		       string
 		TranslationDirectory   string
 		Debug                  bool
-		DBUsername             string
-		DBPassword             string
 		FFmpeg                 string
 		SignRequests           bool
 		ImageTimeout           int
@@ -34,8 +33,14 @@ type config struct {
 
 func (self *config) MakeConfig(configPath string) {
 	self.Gottp.Listen = "127.0.0.1:8811"
-	self.Moire.DBAddress = "127.0.0.1:27017"
-	self.Moire.DBName = "gallery"
+
+	if DbUrl := os.Getenv("MONGODB_URL"); DbUrl != "" {
+		self.Moire.DbUrl = DbUrl
+	} else {
+		self.Moire.DbUrl = "mongodb://localhost/gallery"
+	}
+
+	self.Moire.DbName = "gallery"
 	self.Moire.Debug = false
 	self.Moire.FFmpeg = "ffmpeg"
 	self.Moire.SignRequests = false
