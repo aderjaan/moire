@@ -397,7 +397,7 @@ func GetConn(connString, db_name string) *MConn {
 		}
 
 		// get a mgo session
-		session, err := mgo.DialWithInfo(dialInfo)
+		session, err = mgo.DialWithInfo(dialInfo)
 		if err != nil {
 			panic(err)
 		}
