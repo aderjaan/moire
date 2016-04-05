@@ -2,7 +2,7 @@ package server
 
 import (
 	log "github.com/Sirupsen/logrus"
-	"github.com/Sirupsen/logrus/hooks/sentry"
+	"github.com/evalphobia/logrus_sentry"
 	"github.com/bulletind/moire/config"
 	"github.com/bulletind/moire/db"
 )
