@@ -2,7 +2,7 @@ package server
 
 import (
 	log "github.com/Sirupsen/logrus"
-	"github.com/Sirupsen/logrus/hooks/sentry"
+	"github.com/evalphobia/logrus_sentry"
 	"github.com/bulletind/moire/config"
 	"github.com/bulletind/moire/db"
 )
@@ -45,13 +45,9 @@ func setupLogging() {
 }
 
 func setupDatabase() {
-	log.Println("Connecting Database:" + config.Settings.Moire.DBName + " " +
-		"at address:" + config.Settings.Moire.DBAddress)
+	log.Debug("Connecting Database:" + config.Settings.Moire.DbUrl)
 
-	db.Conn = db.GetConn(config.Settings.Moire.DBName,
-		config.Settings.Moire.DBAddress, config.Settings.Moire.DBUsername,
-		config.Settings.Moire.DBPassword)
+	db.Conn = db.GetConn(config.Settings.Moire.DbUrl, config.Settings.Moire.DbName)
 
-	log.Println("Database Connected :" + config.Settings.Moire.DBName + " " +
-		"at address:" + config.Settings.Moire.DBAddress)
+	log.Println("Database Connected :" + config.Settings.Moire.DbName)
 }

@@ -1,6 +1,6 @@
 {
 	"ImportPath": "github.com/bulletind/moire",
-	"GoVersion": "go1.5.2",
+	"GoVersion": "go1.6",
 	"Packages": [
 		"github.com/bulletind/moire",
 		"github.com/bulletind/moire/config",
@@ -17,13 +17,18 @@
 		},
 		{
 			"ImportPath": "github.com/Sirupsen/logrus",
-			"Comment": "v0.8.7",
-			"Rev": "418b41d23a1bf978c06faea5313ba194650ac088"
+			"Comment": "v0.10.0",
+			"Rev": "4b6ea7319e214d98c938f12692336f7ca9348d6b"
 		},
 		{
 			"ImportPath": "github.com/ajstarks/svgo",
 			"Comment": "go.weekly.2012-01-27-114-ga7778b8",
 			"Rev": "a7778b8b562eca0ba5b3d4a58e2f17e5800d93fb"
+		},
+		{
+			"ImportPath": "github.com/evalphobia/logrus_sentry",
+			"Comment": "v0.1.0-5-gd265708",
+			"Rev": "d265708c9c877d2f458e673f0af437a0529baee9"
 		},
 		{
 			"ImportPath": "github.com/getsentry/raven-go",

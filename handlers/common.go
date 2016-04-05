@@ -13,11 +13,8 @@ import (
 
 func getConn() *db.MConn {
 	return db.GetConn(
-		config.Settings.Moire.DBName,
-		config.Settings.Moire.DBAddress,
-		config.Settings.Moire.DBUsername,
-		config.Settings.Moire.DBPassword,
-	)
+		config.Settings.Moire.DbUrl,
+		config.Settings.Moire.DbName)
 }
 
 func ConcatenateErrors(errs *[]error) string {
