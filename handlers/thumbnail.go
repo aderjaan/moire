@@ -8,7 +8,6 @@ import (
 	"image/jpeg"
 	"image/png"
 	"io"
-	"math/big"
 	"net/http"
 	"path"
 	"time"
@@ -36,8 +35,8 @@ type cmdStruct struct {
 //const PLAY_ICON_PATH = "/tmp/playiconhover.png"
 
 const thumbTime int = 1
-const thumbX int = 320
-const thumbY int = 240
+const thumbW int = 320
+const thumbH int = 240
 
 func execCommand(cmd *exec.Cmd) {
 	err := executeRaw(cmd)
@@ -58,7 +57,7 @@ func execCommand(cmd *exec.Cmd) {
 //	return thumbPath
 //}
 
-func videoThumbnail(asset *db.Asset, duration, sizeX, sizeY int) string {
+func videoThumbnail(asset *db.Asset, duration, sizeW, sizeH int) string {
 	assetId := asset.Id.Hex()
 
 	hour := 0
@@ -82,7 +81,7 @@ func videoThumbnail(asset *db.Asset, duration, sizeX, sizeY int) string {
 
 	//input := fmt.Sprintf(`%v`, signedUrl)
 	time := fmt.Sprintf(`%02d:%02d:%02d`, hour, minute, second)
-	scale := fmt.Sprintf(`scale=%v:-1`, sizeX)
+	scale := fmt.Sprintf(`scale=%v:-1`, sizeW)
 
 	videoThumber := exec.Command(
 		config.Settings.Moire.FFmpeg, "-i", signedUrl, "-ss",
@@ -92,13 +91,6 @@ func videoThumbnail(asset *db.Asset, duration, sizeX, sizeY int) string {
 	execCommand(videoThumber)
 
 	return thumbPath
-}
-
-func getGCD(x, y int64) int64 {
-	// I have no idea, where this function is being used.
-
-	gcd := new(big.Int).GCD(nil, nil, big.NewInt(x), big.NewInt(y)).Int64()
-	return gcd
 }
 
 func getImage(rc io.Reader) (img image.Image, ft string, err error) {
@@ -217,8 +209,8 @@ const TemporaryRedirect = 302
 
 type thumbArgs struct {
 	Time string `json:"time"`
-	X    string `json:"x"`
-	Y    string `json:"y"`
+	W    string `json:"w"`
+	H    string `json:"h"`
 }
 
 type Thumbnail struct {
@@ -271,23 +263,23 @@ func (self *Thumbnail) Get(request *gottp.Request) {
 	}
 
 	// If err is nil, implies that thumbnail was successfully located.
-	if args.Time+args.X+args.Y != "" {
+	if args.Time+args.W+args.H != "" {
 		time, _ := strconv.Atoi(args.Time)
 		if time == 0 {
 			time = thumbTime
 		}
 
-		x, _ := strconv.Atoi(args.X)
-		if x == 0 {
-			x = thumbX
+		w, _ := strconv.Atoi(args.W)
+		if w == 0 {
+			w = thumbW
 		}
 
-		y, _ := strconv.Atoi(args.Y)
-		if y == 0 {
-			y = thumbY
+		h, _ := strconv.Atoi(args.H)
+		if h == 0 {
+			h = thumbH
 		}
 
-		cacheKey := fmt.Sprintf("%v_%v_%v", time, x, y)
+		cacheKey := fmt.Sprintf("%v_%v_%v", time, w, h)
 
 		if thumbUrl, ok = asset.Thumbnails[cacheKey]; !ok {
 
@@ -295,10 +287,10 @@ func (self *Thumbnail) Get(request *gottp.Request) {
 			var thumbPath string
 
 			if asset.FileType == VideoFile {
-				thumbPath = videoThumbnail(asset, time, x, y)
+				thumbPath = videoThumbnail(asset, time, w, h)
 
 			} else if asset.FileType == ImageFile {
-				thumbPath = imageThumbnail(asset, x, y)
+				thumbPath = imageThumbnail(asset, w, h)
 
 			} else {
 				request.Raise(gottp.HttpError{

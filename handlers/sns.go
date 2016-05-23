@@ -92,7 +92,7 @@ func (self *SNS) Post(request *gottp.Request) {
 
 func processMessage(record Record, key string) {
 	doc := db.M{
-		"size": record.S3.Object.Size,
+		"size":   record.S3.Object.Size,
 		"status": db.PROCESSING,
 	}
 
@@ -108,12 +108,11 @@ func processMessage(record Record, key string) {
 
 	log.Infoln("asset " + assetId + " being processed")
 
-
 	thumbnailPath := getThumbnailUploadURL(assetId, asset.Collection, asset.Name)
 
 	if asset.FileType == VideoFile {
 
-		thumbPath := videoThumbnail(asset, thumbTime, thumbX*2, thumbY*2)
+		thumbPath := videoThumbnail(asset, thumbTime, thumbW*2, thumbH*2)
 		optimizeThumbnail(thumbPath)
 
 		uploadFile(asset.Bucket, thumbnailPath, thumbPath)
@@ -126,7 +125,7 @@ func processMessage(record Record, key string) {
 
 	} else if asset.FileType == ImageFile {
 
-		thumbPath := imageThumbnail(asset, thumbX, thumbY)
+		thumbPath := imageThumbnail(asset, thumbW, thumbH)
 		optimizeThumbnail(thumbPath)
 
 		uploadFile(asset.Bucket, thumbnailPath, thumbPath)
@@ -146,14 +145,14 @@ func processMessage(record Record, key string) {
 
 type Record struct {
 	S3 struct {
-		   Bucket struct {
-					  Name string `json:"name" required:"true"`
-				  } `json:"bucket" required:"true"`
-		   Object struct {
-					  Key  string `json:"key" required:"true"`
-					  Size int    `json:"size" required:"true"`
-				  } `json:"object" required:"true"`
-	   }
+		Bucket struct {
+			Name string `json:"name" required:"true"`
+		} `json:"bucket" required:"true"`
+		Object struct {
+			Key  string `json:"key" required:"true"`
+			Size int    `json:"size" required:"true"`
+		} `json:"object" required:"true"`
+	}
 }
 
 type snsMessage struct {
