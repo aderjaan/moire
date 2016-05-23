@@ -35,8 +35,8 @@ type cmdStruct struct {
 //const PLAY_ICON_PATH = "/tmp/playiconhover.png"
 
 const thumbTime int = 1
-const thumbW int = 320
-const thumbH int = 240
+const thumbWidth int = 320
+const thumbHeight int = 240
 
 func execCommand(cmd *exec.Cmd) {
 	err := executeRaw(cmd)
@@ -211,6 +211,8 @@ type thumbArgs struct {
 	Time string `json:"time"`
 	W    string `json:"w"`
 	H    string `json:"h"`
+	X    string `json:"x"`
+	Y    string `json:"y"`
 }
 
 type Thumbnail struct {
@@ -263,20 +265,32 @@ func (self *Thumbnail) Get(request *gottp.Request) {
 	}
 
 	// If err is nil, implies that thumbnail was successfully located.
-	if args.Time+args.W+args.H != "" {
+	if args.Time+args.W+args.H+args.X+args.Y != "" {
 		time, _ := strconv.Atoi(args.Time)
 		if time == 0 {
 			time = thumbTime
 		}
 
 		w, _ := strconv.Atoi(args.W)
+		x, _ := strconv.Atoi(args.X)
+		// fallback to x if w is not provided
+		if w == 0 && x != 0 {
+			w = x
+		}
+		// use default width
 		if w == 0 {
-			w = thumbW
+			w = thumbWidth
 		}
 
 		h, _ := strconv.Atoi(args.H)
+		y, _ := strconv.Atoi(args.Y)
+		// fallback to y if h is not provided
+		if h == 0 && y != 0 {
+			h = y
+		}
+		// use default height
 		if h == 0 {
-			h = thumbH
+			h = thumbHeight
 		}
 
 		cacheKey := fmt.Sprintf("%v_%v_%v", time, w, h)
