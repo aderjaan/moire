@@ -152,7 +152,7 @@ func DownloadFile(url, loc string) error {
 	return nil
 }
 
-func imageThumbnail(asset *db.Asset, sizeX, sizeY int) string {
+func imageThumbnail(asset *db.Asset, width, height int) string {
 
 	assetId := asset.Id.Hex()
 
@@ -160,7 +160,7 @@ func imageThumbnail(asset *db.Asset, sizeX, sizeY int) string {
 	thumbPath := fmt.Sprintf("/tmp/%v_thumb.png", assetId)
 	cleanupThumbnail(thumbPath)
 
-	scale := fmt.Sprintf(`%vx%v`, sizeX, sizeY)
+	scale := fmt.Sprintf(`%vx%v`, width, height)
 
 	if err := DownloadFile(signedUrl, thumbPath); err != nil {
 		panic(err)
@@ -184,7 +184,7 @@ func imageThumbnail(asset *db.Asset, sizeX, sizeY int) string {
 	//	log.Fatal(err)
 	//}
 
-	//m := resize.Thumbnail(uint(sizeX), uint(sizeY), img, resize.Lanczos3)
+	//m := resize.Thumbnail(uint(width), uint(height), img, resize.Lanczos3)
 
 	//out, err := os.Create(thumbPath)
 	//if err != nil {
