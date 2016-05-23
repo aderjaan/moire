@@ -112,7 +112,7 @@ func processMessage(record Record, key string) {
 
 	if asset.FileType == VideoFile {
 
-		thumbPath := videoThumbnail(asset, thumbTime, thumbW*2, thumbH*2)
+		thumbPath := videoThumbnail(asset, thumbTime, thumbWidth*2, thumbHeight*2)
 		optimizeThumbnail(thumbPath)
 
 		uploadFile(asset.Bucket, thumbnailPath, thumbPath)
@@ -125,7 +125,7 @@ func processMessage(record Record, key string) {
 
 	} else if asset.FileType == ImageFile {
 
-		thumbPath := imageThumbnail(asset, thumbW, thumbH)
+		thumbPath := imageThumbnail(asset, thumbWidth, thumbHeight)
 		optimizeThumbnail(thumbPath)
 
 		uploadFile(asset.Bucket, thumbnailPath, thumbPath)
