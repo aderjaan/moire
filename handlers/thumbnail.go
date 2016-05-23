@@ -8,7 +8,6 @@ import (
 	"image/jpeg"
 	"image/png"
 	"io"
-	"math/big"
 	"net/http"
 	"path"
 	"time"
@@ -92,13 +91,6 @@ func videoThumbnail(asset *db.Asset, duration, sizeW, sizeH int) string {
 	execCommand(videoThumber)
 
 	return thumbPath
-}
-
-func getGCD(x, y int64) int64 {
-	// I have no idea, where this function is being used.
-
-	gcd := new(big.Int).GCD(nil, nil, big.NewInt(x), big.NewInt(y)).Int64()
-	return gcd
 }
 
 func getImage(rc io.Reader) (img image.Image, ft string, err error) {
