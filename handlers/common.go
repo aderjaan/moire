@@ -98,6 +98,9 @@ func assetReady(conn *db.MConn, path, bucket string, doc db.M) *db.Asset {
 
 func createAsset(conn *db.MConn, args *assetArgs) *db.Asset {
 	assetId := bson.NewObjectId()
+	if len(args.Id) > 0 {
+		assetId = bson.ObjectIdHex(args.Id)
+	}
 
 	if args.Collection == "" {
 		args.Collection = DefaultCollection
