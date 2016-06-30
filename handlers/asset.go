@@ -31,7 +31,7 @@ func (self *Asset) Get(request *gottp.Request) {
 	}
 
 	conn := getConn()
-	asset := getAsset(conn, _id)
+	asset, _ := getAsset(conn, _id)
 
 	request.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 
@@ -39,7 +39,7 @@ func (self *Asset) Get(request *gottp.Request) {
 
 	if asset.Status != db.READY && asset.FileType == ImageFile {
 		pollUntilReady(conn, _id)
-		asset = getAsset(conn, _id)
+		asset, _ = getAsset(conn, _id)
 	}
 
 	// This needs explanation and refactoring
@@ -84,7 +84,7 @@ func (self *Asset) Post(request *gottp.Request) {
 	}
 
 	conn := getConn()
-	asset := getAsset(conn, _id)
+	asset, _ := getAsset(conn, _id)
 
 	signedUrl := getSignedUploadURL(asset.Bucket, asset.Path, asset.MimeType)
 

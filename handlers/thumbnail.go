@@ -232,13 +232,13 @@ func (self *Thumbnail) Get(request *gottp.Request) {
 	}
 
 	conn := getConn()
-	asset := getAsset(conn, _id)
+	asset, _ := getAsset(conn, _id)
 
 	request.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 
 	if asset.Status != db.READY && asset.FileType == ImageFile {
 		pollUntilReady(conn, _id)
-		asset = getAsset(conn, _id)
+		asset, _ = getAsset(conn, _id)
 	}
 
 	args := thumbArgs{}

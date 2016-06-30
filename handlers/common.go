@@ -47,7 +47,7 @@ func pollUntilReady(conn *db.MConn, _id string) {
 			return
 			// Got a tick, we should check on doSomething()
 		case <-tick:
-			asset := getAsset(conn, _id)
+			asset, _ := getAsset(conn, _id)
 			ok := asset.Status == db.READY
 			if ok {
 				return
@@ -56,14 +56,14 @@ func pollUntilReady(conn *db.MConn, _id string) {
 	}
 }
 
-func getAsset(conn *db.MConn, _id string) *db.Asset {
+func getAsset(conn *db.MConn, _id string) (*db.Asset, error) {
 	var asset db.Asset
 	err := conn.GetOne(db.ASSET, db.M{"_id": bson.ObjectIdHex(_id)}, &asset)
 	if err != nil {
-		panic(err)
+		return &asset, err
 	}
 
-	return &asset
+	return &asset, nil
 }
 
 func assetReady(conn *db.MConn, path, bucket string, doc db.M) *db.Asset {
@@ -98,6 +98,9 @@ func assetReady(conn *db.MConn, path, bucket string, doc db.M) *db.Asset {
 
 func createAsset(conn *db.MConn, args *assetArgs) *db.Asset {
 	assetId := bson.NewObjectId()
+	if args.HasId() {
+		assetId = bson.ObjectIdHex(args.Id)
+	}
 
 	if args.Collection == "" {
 		args.Collection = DefaultCollection
